@@ -1,23 +1,13 @@
+import Map
+import random
 from pico2d import *
-import math
 
-WIDTH, HEIGHT = 1200, 822
-
-mapping = [[1, 1, 1, 1, 1, 1, 0, 0],
-           [0, 0, 0, 0, 0, 1, 0, 2],
-           [0, 0, 0, 0, 0, 1, 0, 0],
-           [0, 0, 0, 0, 0, 1, 0, 0],
-           [0, 1, 1, 1, 1, 1, 0, 0],
-           [0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 0, 0, 2],
-           [0, 0, 0, 0, 0, 0, 0, 0]]
-
-
+running = True
 class Pinn:
     stopMoving = True
     frame = 0
-    x = WIDTH // 2 - 100
-    y = HEIGHT // 2 + 50
+    x = Map.WIDTH // 2 - 100
+    y = Map.HEIGHT // 2 + 50
     oldX = x
     oldY = y
     dirX = 0
@@ -94,46 +84,85 @@ class Pinn:
             self.character.clip_draw(self.frame * 23 * 4, (315 - 35 * (self.line + 1)) * 4, 23 * 4, 34 * 4, self.x,
                                      self.y + 34 * 2 - 25)
             self.frame = (self.frame + 1) % 6
-        if self.y > HEIGHT - 431 - 72:
+        if self.y > Map.HEIGHT - 431 - 72:
             global kitchenTable
-            kitchenTable.draw(366 + 257 // 2 + 1, HEIGHT - 431 - 72 // 2)
-    #         Table 전체 그리는게 좋을 듯
-    def next_move(self):
+            kitchenTable.draw(366 + 257 // 2 + 1, Map.HEIGHT - 431 - 72 // 2)
+
+    def logic(self):
         if self.dirX * self.dirY != 0:
             self.x += self.dirX * 15 * (1 / math.sqrt(2))
             self.y += self.dirY * 15 * (1 / math.sqrt(2))
         else:
             self.x += self.dirX * 15
             self.y += self.dirY * 15
-        global mapping
-        global HEIGHT
         if (self.x - 264) // 70 < 0 or (
                 self.x - 264) // 70 > 7 or (
-                HEIGHT - self.y - 328) // 35 < 0 or (
-                HEIGHT - self.y - 328) // 35 > 7 or (
-                mapping[int(HEIGHT - self.y - 328) // 35][int(self.x - 264) // 70] != 0):
+                Map.HEIGHT - self.y - 328) // 35 < 0 or (
+                Map.HEIGHT - self.y - 328) // 35 > 7 or (
+                Map.mapping[int(Map.HEIGHT - self.y - 328) // 35][int(self.x - 264) // 70] != 0):
             self.x = self.oldX
             self.y = self.oldY
         else:
             self.oldX = self.x
             self.oldY = self.y
+    def grabSomething(self):
+        pass
 
 
-open_canvas(WIDTH, HEIGHT)
-background = load_image('map\\map-Recovered-Recovered.png')
-kitchenTable = load_image("map\\kitchenTable.png")
-running = True
-pinn = Pinn()
+class zombie:
+    def __init__(self):
+        gender = random.randint(0, 2)
+        if gender == 0:
+            image = load_image("character\\girlZombieSprite.png")
+        else:
+            image = load_image("character\\boyZombieSprite.png")
 
-while running:
-    clear_canvas()
-    background.draw(WIDTH // 2, HEIGHT // 2)
-    pinn.handle_events()
+    def zombieBirth(self):
+        pass
+
+    def walkToCafe(self):
+        pass
+
+    def checkTable(self):
+        pass
+
+    def readyToOrder(self):
+        pass
+
+    def waitingOrder(self):
+        pass
+
+    def ThanksBye(self):
+        pass
+
+    def FailServe(self):
+        pass
+
+pinn = None
+background = None
+kitchenTable = None
+
+def enter():
+    global pinn, background, kitchenTable
+    pinn = Pinn()
+    background = load_image('map\\map-Recovered-Recovered.png')
+    kitchenTable = load_image("map\\kitchenTable.png")
+
+def update():
     pinn.LineSet()
-    pinn.next_move()
+    pinn.logic()
+
+def handle_events():
+    pinn.handle_events()
+
+def draw():
+    clear_canvas()
+    background.draw(Map.WIDTH // 2, Map.HEIGHT // 2)
     pinn.draw()
     update_canvas()
+    delay(0.05)
 
-    delay(0.07)
+def exit():
+    global pinn
+    del pinn
 
-close_canvas()
