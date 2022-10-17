@@ -1,11 +1,11 @@
 import pico2d
 import math
-import Map
-import ClassPinn
+import gamePlay
+import std
 
-pico2d.open_canvas(WIDTH, HEIGHT)
+pico2d.open_canvas(std.WIDTH, std.HEIGHT)
 
-states = [ClassPinn]  # module을 변수로 취급
+states = [gamePlay]  # module을 변수로 취급
 for state in states:
     state.enter()
     while state.running:
