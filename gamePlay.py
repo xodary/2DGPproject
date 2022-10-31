@@ -1,37 +1,52 @@
 from std import *
+from pico2d import *
 from pinnClass import *
 from zombieClass import *
+from objectClass import *
 import game_framework
-from pico2d import *
-import std
 
 
 def enter():
-    global pinn, background, kitchenTable, table, wall, bubbleBean, bubbleBlood, chair
-    pinn = Pinn()
-    zombies[0] = Zombie()
+
+    for i in range(18):
+        mapping[0][i] = 1
+        mapping[10][i] = 1
+    for i in range(11):
+        mapping[i][0] = 1
+        mapping[i][17] = 1
+
+    global pinn, background
     background = load_image('map\\map.png')
-    kitchenTable = load_image("map\\kitchenTable.png")
-    wall = load_image('map\\wall.png')
-    table = load_image('map\\table.png')
-    bubbleBean = load_image('order\\bubble\\coffeebubbleSprite.png')
-    bubbleBlood = load_image('order\\bubble\\bloodbubbleSprite.png')
-    chair = load_image('map\\chair.png')
+    pinn = Pinn()
+
+    global zombies
+    zombies = [Zombie()]
+
+    global wall
+    wall = objectCoordi(230, 601, 626, 76, 'map\\wall.png')
+
     global bloodAmericano, Latte
     bloodAmericano = load_image('order\\bloodAmericano.png')
     Latte = load_image('order\\Latte.png')
-    global trash
-    trash = load_image('map\\trash.png')
-    global bubblemilk
-    bubblemilk = load_image('order\\bubble\\milkbubbleSprite.png')
-    global bubblecup
-    bubblecup = load_image('order\\bubble\\coffeebubble.png')
+
+    global kitchenTables, tables, chairs, milkBox, cuptablesSmall, trashes, machines, blood
+    kitchenTables = [[objectIndex(3, 4, 9, 1, 306, 72, "map\\kitchenTable.png"),
+                      objectIndex(10, 0, 2, 5, 46, 197, "map\\kitchenTableright.png")]]
+    tables = [objectIndex(12, 1, 2, 2, 63, 65,  'map\\table.png'),
+              objectIndex(12, 6, 2, 2, 63, 65,  'map\\table.png')]
+    chairs = [objectIndex(14, 1, 2, 1, 60, 90, 'map\\chair.png'),
+              objectIndex(14, 6, 2, 1, 60, 90, 'map\\chair.png')]
+    trashes = [objectIndex(2, 4, 1, 1, 35, 59, 'map\\trash.png')]
+    machines = [objectIndex(0, 0, 2, 1, 53, 120, 'map\\machine.png', "order\\bubble\\coffeebubbleSprite.png")]
+    blood = [objectIndex(2, 0, 2, 1, 46, 156, 'map\\water.png', 'order\\bubble\\bloodbubbleSprite.png')]
+    milkBox = [objectIndex(4, 0, 2, 1, 51, 89, 'map\\milkBox.png', 'order\\bubble\\milkbubbleSprite.png')]
+    cuptablesSmall = [objectIndex(8, 0, 2, 1, 62, 109, 'map\\cuptableSmall.png', 'order\\bubble\\coffeebubble.png', 60)]
 
 
 def update():
-    pinn.logic()
+    pinn.update()
     for zombie in zombies:
-        zombie.logic()
+        zombie.update()
         if zombie.yPos < 0:
             del zombie
     global zombieSpawn
@@ -42,119 +57,75 @@ def update():
 
 
 def handle_events():
-    pinn.handle_events()
+    events = get_events()
+    for event in events:
+        if event.type == SDL_QUIT or event.key == SDLK_ESCAPE:
+            game_framework.quit()
+        else:
+            pinn.handle_events(event)
+
 
 
 def draw():
     clear_canvas()
     background.draw(WIDTH // 2, HEIGHT // 2)
 
-
     # 오브젝트 y 값으로 정렬 후 출력
-    yPosition = [Object(kitchenTable, kitchenTableCoordinate[stage][0],kitchenTableCoordinate[stage][1],False , 250, 72, HEIGHT - kitchenTableCoordinate[stage][1] - 72),
-                 Object(trash, trashCoordinate[stage][0], trashCoordinate[stage][1], False, 36, 58, HEIGHT - trashCoordinate[stage][1] - 58),
-                 Object(wall, wallCoordinate[stage][0],wallCoordinate[stage][1], False, 626, 424, HEIGHT - wallCoordinate[stage][1] - 424),
-                 Object(pinn, compareY=pinn.y, special=True)]
+    yPosition = [pinn, wall]
 
-    for tablecoordi in tableCoordinate[stage]:
-        yPosition.append(Object(table, tablecoordi[0], tablecoordi[1], False, 64, 64,
-               HEIGHT - tablecoordi[1] - 64 + 20))
+    for trash in trashes:
+        yPosition.append(trash)
+    for b in blood:
+        yPosition.append(b)
 
-    for chaircoordi in chairCoordinate[stage]:
-        yPosition.append(Object(chair, chaircoordi[0], chaircoordi[1], False, 60, 90,
-               HEIGHT - chaircoordi[1] - 90 + 30))
+    for milk in milkBox:
+        yPosition.append(milk)
 
-    for zombie in zombies:
-        yPosition.append(Object(zombie, compareY=zombie.yPos - 10, special=True))
+    for cuptableSmall in cuptablesSmall:
+        yPosition.append(cuptableSmall)
 
-    yPosition.sort(reverse=True, key=lambda c:c.compareY)
+    for machine in machines:
+        yPosition.append(machine)
+
+    for kitchenTable in kitchenTables:
+        yPosition.append(kitchenTable[0])
+        yPosition.append(kitchenTable[1])
+
+    for table in tables:
+        yPosition.append(table)
+
+    for chair in chairs:
+        yPosition.append(chair)
+
+    # for zombie in zombies:
+    #     yPosition.append(zombie)
+
+
+    yPosition.sort(reverse=True, key=lambda c:c.down)
 
     for obj in yPosition:
-        match obj.special:
-            case False:
-                obj.name.draw(obj.x + obj.width // 2, HEIGHT - obj.y - obj.height // 2)
-                if obj.name == kitchenTable:
-                    for cup in cups:
-                         cup.draw()
-            case True:
-                obj.name.draw()
+        obj.draw()
 
 
     global bubbleframe  # bubbleframe은 평소에 0임. 3을 바라보면 말풍선이 생긴다.
-    match mapping[int(HEIGHT - pinn.y - mapstart[stage][1]) // 35 + Looking[pinn.stop][0]][
-        int(pinn.x - mapstart[stage][0]) // 35 + Looking[pinn.stop][1]]:
-        case 'shot':
-            bubbleBean.clip_draw(50 * bubbleframe, 0, 50, 50,
-                                 bubbleBeanCoordinate[stage][0] + 50 // 2,
-                                 HEIGHT - bubbleBeanCoordinate[stage][1] - 50 // 2)
-            if bubbleframe < 2:
-                bubbleframe = bubbleframe + 1
-        case 'blood':
-            bubbleBlood.clip_draw(50 * bubbleframe, 0, 50, 50,
-                                  bubbleBloodCoordinate[stage][0] + 50 // 2,
-                                  HEIGHT - bubbleBloodCoordinate[stage][1] - 50 // 2)
-            if bubbleframe < 2:
-                bubbleframe = bubbleframe + 1
-        case 'milk':
-            bubblemilk.clip_draw(50 * bubbleframe, 0, 50, 50,
-                                 bubblemilkCoordinate[stage][0] + 50 // 2,
-                                 HEIGHT - bubblemilkCoordinate[stage][1] - 50 // 2)
-            if bubbleframe < 2:
-                bubbleframe = bubbleframe + 1
-        case 'cup1':
-            bubblecup.clip_draw(60 * bubbleframe, 0, 60, 60,
-                                bubblecup1Coordinate[stage][0] + 60 // 2,
-                                HEIGHT - bubblecup1Coordinate[stage][1] - 60 // 2)
-            if bubbleframe < 2:
-                bubbleframe = bubbleframe + 1
-        case 'cup2':
-            bubblecup.clip_draw(60 * bubbleframe, 0, 60, 60,
-                                bubblecup2Coordinate[stage][0] + 60 // 2,
-                                HEIGHT - bubblecup2Coordinate[stage][1] - 60 // 2)
-            if bubbleframe < 2:
-                bubbleframe = bubbleframe + 1
-        case _:
-            bubbleframe = 0
-    #
-    # for zombie in zombies:
-    #     if pinn.y < zombie.yPos - 20:
-    #         zombie.draw()
-    #         if zombie.yPos > HEIGHT - tableCoordinate[stage][1] - 65:
-    #             table.draw(tableCoordinate[stage][0] + 64 // 2,
-    #                        HEIGHT - tableCoordinate[stage][1] - 64 // 2)
-    #         if zombie.yPos > HEIGHT - chairCoordinate[stage][1] - 90:
-    #             chair.draw(chairCoordinate[stage][0] + 60 // 2, HEIGHT - chairCoordinate[stage][1] - 90 // 2)
-    # pinn.draw()
-    # if pinn.y - 20 > HEIGHT - kitchenTableCoordinate[stage][1] - 72:
-    #     kitchenTable.draw(kitchenTableCoordinate[stage][0] + 250 // 2,
-    #                       HEIGHT - kitchenTableCoordinate[stage][1] - 72 // 2)
-    #     for cup in cups:
-    #         cup.draw()
-    # if pinn.y - 20 > HEIGHT - tableCoordinate[stage][1] - 65:
-    #     table.draw(tableCoordinate[stage][0] + 63 // 2 + 1,
-    #                HEIGHT - tableCoordinate[stage][1] - 65 // 2 - 1)
-    # if pinn.y - 20 > HEIGHT - chairCoordinate[stage][1] - 90:
-    #     chair.draw(chairCoordinate[stage][0] + 60 // 2, HEIGHT - chairCoordinate[stage][1] - 90 // 2)
-    # if pinn.y - 20 > HEIGHT - trashCoordinate[stage][1] - 59:
-    #     trash.draw(trashCoordinate[stage][0] + 36 // 2, HEIGHT - trashCoordinate[stage][1] - 58 // 2)
-    # wall.draw(wallCoordinate[stage][0] + 626 // 2, HEIGHT - wallCoordinate[stage][1] - 424 // 2)
-    # for zombie in zombies:
-    #     if pinn.y > zombie.yPos - 20:
-    #         zombie.draw()
-    #         if zombie.yPos > HEIGHT - tableCoordinate[stage][1] - 65:
-    #             table.draw(tableCoordinate[stage][0] + 63 // 2 + 1, HEIGHT - tableCoordinate[stage][1] - 65 // 2 - 1)
-    #         if zombie.yPos > HEIGHT - chairCoordinate[stage][1] - 90:
-    #             chair.draw(chairCoordinate[stage][0] + 60 // 2, HEIGHT - chairCoordinate[stage][1] - 90 // 2)
-    #         if zombie.yPos > HEIGHT - wallCoordinate[stage][1] - 424:
-    #             wall.draw(wallCoordinate[stage][0] + 626 // 2, HEIGHT - wallCoordinate[stage][1] - 424 // 2)
-    for index, menu in enumerate(menuQueue):
-        if QueueTime[index] > -100:
-            QueueTime[index] -= 15
-        match menu:
-            case 'bloodAme':
-                bloodAmericano.draw(100 + index * 173, HEIGHT + QueueTime[index])
-            case 'Latte':
-                Latte.draw(100 + index * 173, HEIGHT + QueueTime[index])
+    row = int(HEIGHT - pinn.y - mapstartY) // 35 + Looking[pinn.stop][0]
+    col = int(pinn.x - mapstartX) // 35 + Looking[pinn.stop][1]
+    if type(mapping[row][col]) == objectIndex:
+        mapping[row][col].drawBubble(bubbleframe)
+        if bubbleframe < 2:
+            bubbleframe += 1
+
+    else:
+        bubbleframe = 0
+
+    # for index, menu in enumerate(menuQueue):
+    #     if QueueTime[index] > -100:
+    #         QueueTime[index] -= 15
+    #     match menu:
+    #         case 'bloodAme':
+    #             bloodAmericano.draw(100 + index * 173, HEIGHT + QueueTime[index])
+    #         case 'Latte':
+    #             Latte.draw(100 + index * 173, HEIGHT + QueueTime[index])
 
     update_canvas()
     delay(0.05)

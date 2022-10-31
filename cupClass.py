@@ -19,14 +19,11 @@ class Cup:
         match menu:
             case 'bloodAme':
                 if 'shot' in self.setting and 'blood' in self.setting and len(self.setting) == 2:
-                    return 'success'
-                else:
-                    return 'fail'
+                    return GOOD
             case 'Latte':
                 if 'milk' in self.setting and 'shot' in self.setting and len(self.setting) == 2:
-                    return 'success'
-                else:
-                    return 'fail'
+                    return GOOD
+        return BAD
 
     def draw(self):
         xPos = mapstart[stage][0] + 35 * self.xIndex + 36 // 2
