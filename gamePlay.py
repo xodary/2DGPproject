@@ -1,59 +1,71 @@
 from std import *
 from pico2d import *
 from pinnClass import *
-from zombieClass import *
+# from zombieClass import *
 from objectClass import *
+import AllObjectClass
 import game_framework
 
 
 def enter():
 
-    for i in range(18):
-        mapping[0][i] = 1
-        mapping[10][i] = 1
-    for i in range(11):
-        mapping[i][0] = 1
-        mapping[i][17] = 1
+    # global pinn
+    # background = BackGround('map\\mapBig.png')
+    # AllObjectClass.add_object(background, 0)
+    # pinn = Pinn()
+    # AllObjectClass.add_object(pinn, 1)
+    #
+    # # global zombies
+    # # zombies = [Zombie()]
+    #
+    # AllObjectClass.add_object(WALL(630, 253, 626, 75, 'map\\walltop.png'), 1)
+    #
+    # AllObjectClass.add_object(WALL(630, 603, 626, 76, 'map\\wall.png'), 1)
+    #
+    # AllObjectClass.add_object(WALL(0, HEIGHT - 61, 1600, 61, 'map\\fence.png'), 1)
+    #
+    # AllObjectClass.add_object(fire(1478, 853, 40, 70, 'map\\fire.png'), 1)
+    #
+    # # global bloodAmericano, Latte
+    # # bloodAmericano = load_image('order\\bloodAmericano.png')
+    # # Latte = load_image('order\\Latte.png')
+    #
+    # kitchenTables = [[interactionTOOL(3, 4, 8, 1, 253, 72, "map\\kitchenTable.png"),
+    #                   interactionTOOL(10, 0, 2, 5, 46, 197, "map\\kitchenTableright.png")]]
+    # for t in kitchenTables:
+    #     AllObjectClass.add_objects(t, 1)
+    # tables = [TABLE(12, 1, 2, 2, 63, 65,  'map\\table.png'),
+    #           TABLE(12, 6, 2, 2, 63, 65,  'map\\table.png')]
+    # AllObjectClass.add_objects(tables, 1)
+    # chairs = [interactionTOOL(14, 1, 2, 1, 60, 90, 'map\\chair.png'),
+    #           interactionTOOL(14, 6, 2, 1, 60, 90, 'map\\chair.png')]
+    # AllObjectClass.add_objects(chairs, 1)
+    # trashes = [interactionTOOL(2, 4, 1, 1, 35, 59, 'map\\trash.png')]
+    # AllObjectClass.add_objects(trashes, 1)
+    # machines = [interactionTOOL(0, 0, 2, 1, 53, 120, 'map\\machine.png', "order\\bubble\\coffeebubbleSprite.png")]
+    # AllObjectClass.add_objects(machines, 1)
+    # blood = [interactionTOOL(2, 0, 2, 1, 46, 156, 'map\\water.png', 'order\\bubble\\bloodbubbleSprite.png')]
+    # AllObjectClass.add_objects(blood, 1)
+    # milkBox = [interactionTOOL(4, 0, 2, 1, 51, 89, 'map\\milkBox.png', 'order\\bubble\\milkbubbleSprite.png')]
+    # AllObjectClass.add_objects(milkBox, 1)
+    # cuptablesSmall = [interactionTOOL(8, 0, 2, 1, 62, 109, 'map\\cuptableSmall.png', 'order\\bubble\\coffeebubble.png', 60)]
+    # AllObjectClass.add_objects(cuptablesSmall, 1)
 
-    global pinn, background
-    background = load_image('map\\map.png')
+    global pinn
+    background = WALL(0, 0, 1200, 800, 'map\\market.png')
+    AllObjectClass.add_object(background, 0)
     pinn = Pinn()
-
-    global zombies
-    zombies = [Zombie()]
-
-    global wall
-    wall = objectCoordi(230, 601, 626, 76, 'map\\wall.png')
-
-    global bloodAmericano, Latte
-    bloodAmericano = load_image('order\\bloodAmericano.png')
-    Latte = load_image('order\\Latte.png')
-
-    global kitchenTables, tables, chairs, milkBox, cuptablesSmall, trashes, machines, blood
-    kitchenTables = [[objectIndex(3, 4, 9, 1, 306, 72, "map\\kitchenTable.png"),
-                      objectIndex(10, 0, 2, 5, 46, 197, "map\\kitchenTableright.png")]]
-    tables = [objectIndex(12, 1, 2, 2, 63, 65,  'map\\table.png'),
-              objectIndex(12, 6, 2, 2, 63, 65,  'map\\table.png')]
-    chairs = [objectIndex(14, 1, 2, 1, 60, 90, 'map\\chair.png'),
-              objectIndex(14, 6, 2, 1, 60, 90, 'map\\chair.png')]
-    trashes = [objectIndex(2, 4, 1, 1, 35, 59, 'map\\trash.png')]
-    machines = [objectIndex(0, 0, 2, 1, 53, 120, 'map\\machine.png', "order\\bubble\\coffeebubbleSprite.png")]
-    blood = [objectIndex(2, 0, 2, 1, 46, 156, 'map\\water.png', 'order\\bubble\\bloodbubbleSprite.png')]
-    milkBox = [objectIndex(4, 0, 2, 1, 51, 89, 'map\\milkBox.png', 'order\\bubble\\milkbubbleSprite.png')]
-    cuptablesSmall = [objectIndex(8, 0, 2, 1, 62, 109, 'map\\cuptableSmall.png', 'order\\bubble\\coffeebubble.png', 60)]
+    AllObjectClass.add_object(pinn, 1)
+    AllObjectClass.add_object(WALL(21, 306, 158, 307, 'map\\christmas.png'), 1)
+    AllObjectClass.add_object(WALL(499, 344, 263, 289, 'map\\animalmarket.png'), 1)
+    AllObjectClass.add_object(WALL(275, 62, 242, 207, 'map\\shop.png'), 1)
+    AllObjectClass.add_object(WALL(843, 49, 199, 212, 'map\\shop2.png'), 1)
+    AllObjectClass.add_object(WALL(842, 356, 99, 145, 'map\\tree.png'), 1)
 
 
 def update():
-    pinn.update()
-    for zombie in zombies:
-        zombie.update()
-        if zombie.yPos < 0:
-            del zombie
-    global zombieSpawn
-    zombieSpawn -= 1
-    if zombieSpawn <= 0:
-        zombies.append(Zombie())
-        zombieSpawn = 100
+    for object in AllObjectClass.all_objects():
+        object.update()
 
 
 def handle_events():
@@ -67,56 +79,13 @@ def handle_events():
 
 
 def draw():
+
     clear_canvas()
-    background.draw(WIDTH // 2, HEIGHT // 2)
 
-    # 오브젝트 y 값으로 정렬 후 출력
-    yPosition = [pinn, wall]
-
-    for trash in trashes:
-        yPosition.append(trash)
-    for b in blood:
-        yPosition.append(b)
-
-    for milk in milkBox:
-        yPosition.append(milk)
-
-    for cuptableSmall in cuptablesSmall:
-        yPosition.append(cuptableSmall)
-
-    for machine in machines:
-        yPosition.append(machine)
-
-    for kitchenTable in kitchenTables:
-        yPosition.append(kitchenTable[0])
-        yPosition.append(kitchenTable[1])
-
-    for table in tables:
-        yPosition.append(table)
-
-    for chair in chairs:
-        yPosition.append(chair)
-
-    # for zombie in zombies:
-    #     yPosition.append(zombie)
+    for object in AllObjectClass.all_objects():
+        object.draw()
 
 
-    yPosition.sort(reverse=True, key=lambda c:c.down)
-
-    for obj in yPosition:
-        obj.draw()
-
-
-    global bubbleframe  # bubbleframe은 평소에 0임. 3을 바라보면 말풍선이 생긴다.
-    row = int(HEIGHT - pinn.y - mapstartY) // 35 + Looking[pinn.stop][0]
-    col = int(pinn.x - mapstartX) // 35 + Looking[pinn.stop][1]
-    if type(mapping[row][col]) == objectIndex:
-        mapping[row][col].drawBubble(bubbleframe)
-        if bubbleframe < 2:
-            bubbleframe += 1
-
-    else:
-        bubbleframe = 0
 
     # for index, menu in enumerate(menuQueue):
     #     if QueueTime[index] > -100:
@@ -139,7 +108,7 @@ def exit():
 def test_self():
     import sys
     this_module = sys.modules['__main__']
-    pico2d.open_canvas(WIDTH, HEIGHT)
+    pico2d.open_canvas(1200, 800)
     game_framework.run(this_module)
     pico2d.close_canvas()
 

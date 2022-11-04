@@ -1,5 +1,4 @@
 import pico2d
-import math
 import gamePlay
 import std
 

@@ -1,8 +1,10 @@
+import std
 from std import *
 from pico2d import *
 import zombieClass
 import cupClass
 import objectClass
+import AllObjectClass
 
 running = True
 
@@ -22,7 +24,7 @@ class Pinn:
         self.frame = 0
         self.x = WIDTH // 2 - 100
         self.y = HEIGHT // 2
-        self.down = self.y - 40
+        self.down = self.y - 35
         self.oldX = self.x
         self.oldY = self.y
         self.dirX = 0
@@ -30,6 +32,8 @@ class Pinn:
         self.line = 0
         self.stop = 0
         self.item = None
+        self.bubble = None
+        self.something = None
 
     def handle_events(self, event):
         raw = int(HEIGHT - self.y - mapstartY) // 35 + Looking[self.stop][0]
@@ -48,7 +52,6 @@ class Pinn:
             elif event.key == SDLK_SPACE:
                 pass
                 # object = mapping[raw][col]
-
 
                 # match type(object):
                 #     case zombieClass.Zombie:
@@ -133,48 +136,80 @@ class Pinn:
                 self.frame = 0
                 self.stopMoving = True
 
-
     def draw(self):
         if self.stopMoving:
-            self.character.clip_draw(self.stop * 92, (1260 - 140 * (self.line + 1)), 92, 140, self.x,
-                                     self.y + 70 - 30)
+            self.character.clip_draw(self.stop * 92, (1260 - 140 * (self.line + 1)), 92, 140, self.x - std.cameraLEFT,
+                                     self.y + 70 - 30 - std.cameraBOTTOM)
         elif not self.stopMoving:
-            self.character.clip_draw(self.frame * 92, (1260 - 140 * (self.line + 1)), 92, 140, self.x,
-                                     self.y + 70 - 30)
+            self.character.clip_draw(self.frame * 92, (1260 - 140 * (self.line + 1)), 92, 140, self.x - std.cameraLEFT,
+                                     self.y + 70 - 30 - std.cameraBOTTOM)
             self.frame = (self.frame + 1) % 6
-        if self.item is not None:
-            match self.item:
-                case 'shot':
-                    self.coffee.draw(self.x, self.y + 130)
-                case 'blood':
-                    self.blood.draw(self.x, self.y + 130)
-                case 'milk':
-                    self.milk.draw(self.x, self.y + 130)
-                case 'cup':
-                    self.cupBubble.draw(self.x, self.y + 140)
+        # if self.item is not None:
+        #     match self.item:
+        #         case 'shot':
+        #             self.coffee.draw(self.x, self.y + 130)
+        #         case 'blood':
+        #             self.blood.draw(self.x, self.y + 130)
+        #         case 'milk':
+        #             self.milk.draw(self.x, self.y + 130)
+        #         case 'cup':
+        #             self.cupBubble.draw(self.x, self.y + 140)
 
         # 입체감
 
     def update(self):
-        # 대각선 이동
 
-        self.down = self.y - 40
+        self.down = self.y - 35
         if self.dirX * self.dirY != 0:
             self.x += self.dirX * 15 * (1 / math.sqrt(2))
             self.y += self.dirY * 15 * (1 / math.sqrt(2))
         else:
             self.x += self.dirX * 15
             self.y += self.dirY * 15
+        self.x = clamp(50, self.x, 1600 - 50)
+        self.y = clamp(40, self.y, 1000 - 100)
         rawTop = int(HEIGHT - self.y - mapstartY + 10) // 35
         rawBottom = int(HEIGHT - self.y - mapstartY - 10) // 35
         colLeft = int(self.x - mapstartX - 20) // 35
         colRight = int(self.x - mapstartX + 20) // 35
-        if mapping[rawTop][colLeft] != 0 or mapping[rawTop][colRight] != 0 or\
-            mapping[rawBottom][colLeft] != 0 or mapping[rawBottom][colRight] != 0:
+        if mapping[rawTop][colLeft] != 0 or mapping[rawTop][colRight] != 0 or \
+                mapping[rawBottom][colLeft] != 0 or mapping[rawBottom][colRight] != 0:
             self.x = self.oldX
             self.y = self.oldY
         else:
             self.oldX = self.x
             self.oldY = self.y
-        self.LineSet()
 
+        if MAINMAP:
+            if 0 < self.x - std.cameraLEFT < 300 and self.dirX < 0:
+                std.cameraLEFT += -1 * 15
+            elif 1200 > self.x - std.cameraLEFT > 1200 - 300 and self.dirX > 0:
+                std.cameraLEFT += 1 * 15
+            elif 0 < self.y - std.cameraBOTTOM < 300 and self.dirY < 0:
+                std.cameraBOTTOM += -1 * 15
+            elif 800 > self.y - std.cameraBOTTOM > 800 - 300 and self.dirY > 0:
+                std.cameraBOTTOM += 1 * 15
+            std.cameraLEFT = clamp(0, std.cameraLEFT, WIDTH - viewWIDHT)
+            std.cameraBOTTOM = clamp(0, std.cameraBOTTOM, HEIGHT - viewHEIGHT)
+
+        if 0 <= int(HEIGHT - self.y - mapstartY) // 35 + Looking[self.stop][0] <= len(mapping) - 1 and\
+            0 <= int(self.x - mapstartX) // 35 + Looking[self.stop][1] <= len(mapping[0]) - 1:
+            something = mapping[int(HEIGHT - self.y - mapstartY) // 35 + Looking[self.stop][0]][
+                int(self.x - mapstartX) // 35 + Looking[self.stop][1]]
+
+        # 버블 발생 여부
+            if something != self.something:
+                if self.bubble is not None:
+                    AllObjectClass.remove_object(self.bubble)
+                    self.bubble = None
+                if type(something) == objectClass.interactionTOOL:
+                    if something.bubbleimage is not None:
+                        self.bubble = objectClass.Bubble(
+                            something.x, something.y + something.height / 2 + 30,
+                            something.bubbleimage, something.bubbleSize)
+                        AllObjectClass.add_object(self.bubble, 2)
+
+            self.something = something
+
+
+        self.LineSet()
