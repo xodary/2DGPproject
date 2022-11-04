@@ -18,49 +18,53 @@ def enter():
     # # global zombies
     # # zombies = [Zombie()]
     #
-    # AllObjectClass.add_object(WALL(630, 253, 626, 75, 'map\\walltop.png'), 1)
+    # AllObjectClass.add_object(WALL(630, 253, 1001, 120, 'map\\walltop.png'), 1)
     #
-    # AllObjectClass.add_object(WALL(630, 603, 626, 76, 'map\\wall.png'), 1)
+    # AllObjectClass.add_object(WALL(630, 603, 1001, 121, 'map\\wall.png'), 1)
     #
-    # AllObjectClass.add_object(WALL(0, HEIGHT - 61, 1600, 61, 'map\\fence.png'), 1)
+    # AllObjectClass.add_object(WALL(0, HEIGHT - 61, 2560, 97, 'map\\fence.png'), 1)
     #
-    # AllObjectClass.add_object(fire(1478, 853, 40, 70, 'map\\fire.png'), 1)
+    # AllObjectClass.add_object(fire(1478, 853, 256 / 4, 112, 'map\\fire.png'), 1)
     #
     # # global bloodAmericano, Latte
     # # bloodAmericano = load_image('order\\bloodAmericano.png')
     # # Latte = load_image('order\\Latte.png')
     #
-    # kitchenTables = [[interactionTOOL(3, 4, 8, 1, 253, 72, "map\\kitchenTable.png"),
-    #                   interactionTOOL(10, 0, 2, 5, 46, 197, "map\\kitchenTableright.png")]]
+    # kitchenTables = [[interactionTOOL(3, 4, 8, 1, 404, 115, "map\\kitchenTable.png"),
+    #                   interactionTOOL(10, 0, 2, 5, 73, 315, "map\\kitchenTableright.png")]]
     # for t in kitchenTables:
     #     AllObjectClass.add_objects(t, 1)
-    # tables = [TABLE(12, 1, 2, 2, 63, 65,  'map\\table.png'),
-    #           TABLE(12, 6, 2, 2, 63, 65,  'map\\table.png')]
+    # tables = [TABLE(12, 1, 2, 2, 100, 104,  'map\\table.png'),
+    #           TABLE(12, 6, 2, 2, 100, 104,  'map\\table.png')]
     # AllObjectClass.add_objects(tables, 1)
-    # chairs = [interactionTOOL(14, 1, 2, 1, 60, 90, 'map\\chair.png'),
-    #           interactionTOOL(14, 6, 2, 1, 60, 90, 'map\\chair.png')]
+    # chairs = [interactionTOOL(14, 1, 2, 1, 96, 144, 'map\\chair.png'),
+    #           interactionTOOL(14, 6, 2, 1, 96, 144, 'map\\chair.png')]
     # AllObjectClass.add_objects(chairs, 1)
-    # trashes = [interactionTOOL(2, 4, 1, 1, 35, 59, 'map\\trash.png')]
+    # trashes = [interactionTOOL(2, 4, 1, 1, 56, 94, 'map\\trash.png')]
     # AllObjectClass.add_objects(trashes, 1)
-    # machines = [interactionTOOL(0, 0, 2, 1, 53, 120, 'map\\machine.png', "order\\bubble\\coffeebubbleSprite.png")]
+    # machines = [interactionTOOL(0, 0, 2, 1, 84, 194, 'map\\machine.png', "order\\bubble\\coffeebubbleSprite.png")]
     # AllObjectClass.add_objects(machines, 1)
-    # blood = [interactionTOOL(2, 0, 2, 1, 46, 156, 'map\\water.png', 'order\\bubble\\bloodbubbleSprite.png')]
+    # blood = [interactionTOOL(2, 0, 2, 1, 73, 249, 'map\\water.png', 'order\\bubble\\bloodbubbleSprite.png')]
     # AllObjectClass.add_objects(blood, 1)
-    # milkBox = [interactionTOOL(4, 0, 2, 1, 51, 89, 'map\\milkBox.png', 'order\\bubble\\milkbubbleSprite.png')]
+    # milkBox = [interactionTOOL(4, 0, 2, 1, 81, 142, 'map\\milkBox.png', 'order\\bubble\\milkbubbleSprite.png')]
     # AllObjectClass.add_objects(milkBox, 1)
-    # cuptablesSmall = [interactionTOOL(8, 0, 2, 1, 62, 109, 'map\\cuptableSmall.png', 'order\\bubble\\coffeebubble.png', 60)]
+    # cuptablesSmall = [interactionTOOL(8, 0, 2, 1, 99, 174, 'map\\cuptableSmall.png', 'order\\bubble\\coffeebubble.png', 60)]
     # AllObjectClass.add_objects(cuptablesSmall, 1)
+    # cup 36 34
+    # carpet 638 278
+    # signal 320 80
 
-    global pinn
-    background = WALL(0, 0, 1200, 800, 'map\\market.png')
+    global pinn, background
+    background = WALL(0, 0, 1920, 1280, 'map1.6\\market.png')
     AllObjectClass.add_object(background, 0)
     pinn = Pinn()
     AllObjectClass.add_object(pinn, 1)
-    AllObjectClass.add_object(WALL(21, 306, 158, 307, 'map\\christmas.png'), 1)
-    AllObjectClass.add_object(WALL(499, 344, 263, 289, 'map\\animalmarket.png'), 1)
-    AllObjectClass.add_object(WALL(275, 62, 242, 207, 'map\\shop.png'), 1)
-    AllObjectClass.add_object(WALL(843, 49, 199, 212, 'map\\shop2.png'), 1)
-    AllObjectClass.add_object(WALL(842, 356, 99, 145, 'map\\tree.png'), 1)
+    AllObjectClass.add_object(WALL(808, 760, 237, 165, 'map1.6\\flooranimal.png'), 0)
+    AllObjectClass.add_object(interactionTOOL(0, 12, 4, 5, 252, 491, 'map1.6\\christmas.png'), 1)
+    AllObjectClass.add_object(interactionTOOL(13, 12, 8, 5, 263, 289, 'map1.6\\animalmarket.png'), 1)
+    AllObjectClass.add_object(interactionTOOL(7, 5, 7, 3, 387, 331, 'map1.6\\shop.png'), 1)
+    AllObjectClass.add_object(interactionTOOL(23, 6, 6, 2, 318, 339, 'map1.6\\shop2.png'), 1)
+    AllObjectClass.add_object(interactionTOOL(24, 13, 2, 2, 158, 232, 'map1.6\\tree.png'), 1)
 
 
 def update():
@@ -81,7 +85,6 @@ def handle_events():
 def draw():
 
     clear_canvas()
-
     for object in AllObjectClass.all_objects():
         object.draw()
 
@@ -108,7 +111,7 @@ def exit():
 def test_self():
     import sys
     this_module = sys.modules['__main__']
-    pico2d.open_canvas(1200, 800)
+    pico2d.open_canvas(1920, 1280)
     game_framework.run(this_module)
     pico2d.close_canvas()
 

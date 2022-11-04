@@ -6,8 +6,8 @@ from pico2d import *
 class interactionTOOL:
     def __init__(self, xIndex, yIndex, wIndex, hIndex, width, height, pngName, bubbleimage=None, bubbleSize=50):
         self.image = load_image(pngName)
-        self.xIndex = xIndex + 18
-        self.yIndex = yIndex + 9
+        self.xIndex = xIndex + MainMapPlusX
+        self.yIndex = yIndex + MainMapPlusY
         # x와 y는 정가운데임.
         self.x = mapstartX + boxSizeW * self.xIndex + boxSizeW * wIndex / 2
         self.width, self.height = width, height

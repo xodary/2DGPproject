@@ -33,6 +33,9 @@
 #
 #
 #     ]
+# MainMapPlusX, MainMapPlusY = 18, 9
+MainMapPlusX, MainMapPlusY = 0, 0
+
 mapping =[
 [1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0],
 [1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],
@@ -56,22 +59,23 @@ mapping =[
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
 [0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 ]
 
 MAINMAP = False
 # WIDTH, HEIGHT = 1600, 1000
-WIDTH, HEIGHT = 1200, 800
-viewWIDHT, viewHEIGHT = 1200, 800
+WIDTH, HEIGHT = 1200 * 1.6, 800* 1.6
+viewWIDHT, viewHEIGHT = 1200* 1.6, 800* 1.6
 
 # cameraLEFT, cameraBOTTOM = 400, 200
 cameraLEFT, cameraBOTTOM = 0, 0
-boxSizeW = 35
-boxSizeH = 35
+boxSizeW = 57
+boxSizeH = 57
 
 # mapstartX = 34
 # mapstartY = 13
 
-mapstartX = 22
+mapstartX = 35
 mapstartY = 0
 
 BIRTHEND, ENTRANCE, SUCCESS, FAIL, ARRIVAL, ORDER, NoDRINK, DRINK, BYE = range(9)

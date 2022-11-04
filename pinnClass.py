@@ -10,9 +10,9 @@ running = True
 
 
 class Pinn:
-    pinnImage = 'character\\pinn.png'
-    pinnImageX = 92
-    pinnImageY = 140
+    pinnImage = 'character1.6\\pinn.png'
+    pinnImageX = 147
+    pinnImageY = 224
     coffee = 'order\\bubble\\bean.png'
     blood = 'order\\bubble\\blood.png'
     milk = 'order\\bubble\\milkbubble.png'
@@ -36,8 +36,8 @@ class Pinn:
         self.something = None
 
     def handle_events(self, event):
-        raw = int(HEIGHT - self.y - mapstartY) // 35 + Looking[self.stop][0]
-        col = int(self.x - mapstartX) // 35 + Looking[self.stop][1]
+        raw = int(HEIGHT - self.y - mapstartY) // boxSizeH + Looking[self.stop][0]
+        col = int(self.x - mapstartX) // boxSizeW + Looking[self.stop][1]
 
         if event.type == SDL_KEYDOWN:
             self.stopMoving = False
@@ -138,11 +138,17 @@ class Pinn:
 
     def draw(self):
         if self.stopMoving:
-            self.character.clip_draw(self.stop * 92, (1260 - 140 * (self.line + 1)), 92, 140, self.x - std.cameraLEFT,
-                                     self.y + 70 - 30 - std.cameraBOTTOM)
+            self.character.clip_draw(self.stop * Pinn.pinnImageX,
+                                     (2016 - Pinn.pinnImageY * (self.line + 1)),
+                                     Pinn.pinnImageX, Pinn.pinnImageY,
+                                     self.x - std.cameraLEFT,
+                                     self.y + Pinn.pinnImageY / 2 - 45 - std.cameraBOTTOM)
         elif not self.stopMoving:
-            self.character.clip_draw(self.frame * 92, (1260 - 140 * (self.line + 1)), 92, 140, self.x - std.cameraLEFT,
-                                     self.y + 70 - 30 - std.cameraBOTTOM)
+            self.character.clip_draw(self.frame * Pinn.pinnImageX,
+                                     (2016 - Pinn.pinnImageY * (self.line + 1)),
+                                     Pinn.pinnImageX, Pinn.pinnImageY,
+                                     self.x - std.cameraLEFT,
+                                     self.y + Pinn.pinnImageX / 2 - 45 - std.cameraBOTTOM)
             self.frame = (self.frame + 1) % 6
         # if self.item is not None:
         #     match self.item:
@@ -161,17 +167,17 @@ class Pinn:
 
         self.down = self.y - 35
         if self.dirX * self.dirY != 0:
-            self.x += self.dirX * 15 * (1 / math.sqrt(2))
-            self.y += self.dirY * 15 * (1 / math.sqrt(2))
+            self.x += self.dirX * 25 * (1 / math.sqrt(2))
+            self.y += self.dirY * 25 * (1 / math.sqrt(2))
         else:
-            self.x += self.dirX * 15
-            self.y += self.dirY * 15
-        self.x = clamp(50, self.x, 1600 - 50)
-        self.y = clamp(40, self.y, 1000 - 100)
-        rawTop = int(HEIGHT - self.y - mapstartY + 10) // 35
-        rawBottom = int(HEIGHT - self.y - mapstartY - 10) // 35
-        colLeft = int(self.x - mapstartX - 20) // 35
-        colRight = int(self.x - mapstartX + 20) // 35
+            self.x += self.dirX * 25
+            self.y += self.dirY * 25
+        self.x = clamp(50, self.x, WIDTH - 50)
+        self.y = clamp(20, self.y, HEIGHT - 20)
+        rawTop = int(HEIGHT - self.y - mapstartY + 10) // boxSizeH
+        rawBottom = int(HEIGHT - self.y - mapstartY - 10) // boxSizeH
+        colLeft = int(self.x - mapstartX - 20) // boxSizeW
+        colRight = int(self.x - mapstartX + 20) // boxSizeW
         if mapping[rawTop][colLeft] != 0 or mapping[rawTop][colRight] != 0 or \
                 mapping[rawBottom][colLeft] != 0 or mapping[rawBottom][colRight] != 0:
             self.x = self.oldX
@@ -182,20 +188,20 @@ class Pinn:
 
         if MAINMAP:
             if 0 < self.x - std.cameraLEFT < 300 and self.dirX < 0:
-                std.cameraLEFT += -1 * 15
+                std.cameraLEFT += -1 * 25
             elif 1200 > self.x - std.cameraLEFT > 1200 - 300 and self.dirX > 0:
-                std.cameraLEFT += 1 * 15
+                std.cameraLEFT += 1 * 25
             elif 0 < self.y - std.cameraBOTTOM < 300 and self.dirY < 0:
-                std.cameraBOTTOM += -1 * 15
+                std.cameraBOTTOM += -1 * 25
             elif 800 > self.y - std.cameraBOTTOM > 800 - 300 and self.dirY > 0:
-                std.cameraBOTTOM += 1 * 15
+                std.cameraBOTTOM += 1 * 25
             std.cameraLEFT = clamp(0, std.cameraLEFT, WIDTH - viewWIDHT)
             std.cameraBOTTOM = clamp(0, std.cameraBOTTOM, HEIGHT - viewHEIGHT)
 
-        if 0 <= int(HEIGHT - self.y - mapstartY) // 35 + Looking[self.stop][0] <= len(mapping) - 1 and\
-            0 <= int(self.x - mapstartX) // 35 + Looking[self.stop][1] <= len(mapping[0]) - 1:
-            something = mapping[int(HEIGHT - self.y - mapstartY) // 35 + Looking[self.stop][0]][
-                int(self.x - mapstartX) // 35 + Looking[self.stop][1]]
+        if 0 <= int(HEIGHT - self.y - mapstartY) // boxSizeH + Looking[self.stop][0] <= len(mapping) - 1 and\
+            0 <= int(self.x - mapstartX) // boxSizeW + Looking[self.stop][1] <= len(mapping[0]) - 1:
+            something = mapping[int(HEIGHT - self.y - mapstartY) // boxSizeH + Looking[self.stop][0]][
+                int(self.x - mapstartX) // boxSizeW + Looking[self.stop][1]]
 
         # 버블 발생 여부
             if something != self.something:
@@ -213,3 +219,27 @@ class Pinn:
 
 
         self.LineSet()
+
+class IDLE:
+    def enter(self):
+        pass
+    def exit(self):
+        pass
+    def do(self):
+        pass
+    def draw(self):
+        pass
+
+
+class RUN:
+    def enter(self):
+        pass
+
+    def exit(self):
+        pass
+
+    def do(self):
+        pass
+
+    def draw(self):
+        pass

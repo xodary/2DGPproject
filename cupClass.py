@@ -26,8 +26,8 @@ class Cup:
         return BAD
 
     def draw(self):
-        xPos = mapstart[stage][0] + 35 * self.xIndex + 36 // 2
-        yPos = HEIGHT - mapstart[stage][1] - 35 * (self.yIndex - 1) - 34 // 2
+        xPos = mapstart[stage][0] + boxSizeW * self.xIndex + 36 // 2
+        yPos = HEIGHT - mapstart[stage][1] - boxSizeH * (self.yIndex - 1) - 34 // 2
         self.image.draw(xPos, yPos)
         if 'shot' in self.setting:
             self.coffee.draw(xPos, yPos + 50 + self.setting.index('shot') * 60)
