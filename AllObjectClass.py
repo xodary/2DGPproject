@@ -4,7 +4,9 @@
 # layer 1: Foreground Object
 # layer 2: bubble Object
 # layer 3: bills
-objects = [[], [], [], []]
+# layer 4: UI Background
+# lyaer 5: UI
+objects = [[], [], [], [], [], []]
 
 def add_object(o, depth):
     objects[depth].append(o)

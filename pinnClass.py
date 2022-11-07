@@ -1,3 +1,4 @@
+import game_framework
 import std
 from std import *
 from pico2d import *
@@ -5,13 +6,197 @@ import zombieClass
 import cupClass
 import objectClass
 import AllObjectClass
+import gamePlay
+import marketMap
+import marketFramework
 
 running = True
+Looking = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
+
+RD, LD, RU, LU, ND, SD, NU, SU, STOP, SPACE = range(10)
+event_name = ['RD', 'LD', 'RU', 'LU', 'ND', 'SD', 'NU', 'SU', 'STOP', 'SPACE']
+
+key_event_table = {
+    (SDL_KEYDOWN, SDLK_SPACE): SPACE,
+    (SDL_KEYDOWN, SDLK_RIGHT): RD,
+    (SDL_KEYDOWN, SDLK_LEFT): LD,
+    (SDL_KEYUP, SDLK_RIGHT): RU,
+    (SDL_KEYUP, SDLK_LEFT): LU,
+    (SDL_KEYDOWN, SDLK_UP): ND,
+    (SDL_KEYDOWN, SDLK_DOWN): SD,
+    (SDL_KEYUP, SDLK_UP): NU,
+    (SDL_KEYUP, SDLK_DOWN): SU
+}
+
+
+
+class IDLE:
+    def enter(self, event):
+        print('Enter IDLE')
+        self.line = 0
+    def exit(self):
+        pass
+    def do(self):
+        self.bubbleCheck()
+    def draw(self):
+        self.character.clip_draw(self.faceDir * Pinn.pinnImageX,
+                                 (2016 - Pinn.pinnImageY * (self.line + 1)),
+                                 Pinn.pinnImageX, Pinn.pinnImageY,
+                                 self.x - gamePlay.cameraLEFT,
+                                 self.y + Pinn.pinnImageY / 2 - 45 - gamePlay.cameraBOTTOM)
+
+class RUN:
+    def enter(self, event):
+
+        if event == RD:
+            self.dirX += 1
+            print('Enter RD')
+        elif event == RU:
+            self.dirX -= 1
+            print('Enter RU')
+        elif event == LD:
+            self.dirX -= 1
+            print('Enter LD')
+        elif event == LU:
+            self.dirX += 1
+            print('Enter LU')
+        elif event == ND:
+            self.dirY += 1
+            print('Enter ND')
+        elif event == NU:
+            self.dirY -= 1
+            print('Enter NU')
+        elif event == SD:
+            self.dirY -= 1
+            print('Enter SD')
+        elif event == SU:
+            self.dirY += 1
+            print('Enter SU')
+        self.frame = 0
+
+        match (self.dirX, self.dirY):
+            case (1, 1):
+                self.line = 8
+                self.faceDir = 3
+            case (-1, 1):
+                self.line = 7
+                self.faceDir = 5
+            case (-1, -1):
+                self.line = 2
+                self.faceDir = 7
+            case (1, -1):
+                self.line = 3
+                self.faceDir = 1
+            case (0, 1):
+                self.line = 6
+                self.faceDir = 4
+            case (0, -1):
+                self.line = 1
+                self.faceDir = 0
+            case (1, 0):
+                self.line = 5
+                self.faceDir = 2
+            case (-1, 0):
+                self.line = 4
+                self.faceDir = 6
+            case (0, 0):
+                self.add_event(STOP)
+
+    def exit(self):
+        print('Exit RUN')
+
+    def do(self):
+        self.frame = (self.frame + 1) % 6
+        # move checking
+        self.down = self.y - 35
+        if self.dirX * self.dirY != 0:
+            self.x += self.dirX * 25 * (1 / math.sqrt(2))
+            self.y += self.dirY * 25 * (1 / math.sqrt(2))
+        else:
+            self.x += self.dirX * 25
+            self.y += self.dirY * 25
+        self.x = clamp(50, self.x, gamePlay.WIDTH - 50)
+        self.y = clamp(20, self.y, gamePlay.HEIGHT - 20)
+        rawTop = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY + 13) // gamePlay.boxSizeH,
+                       len(gamePlay.mapping) - 1)
+        rawBottom = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY - 13) // gamePlay.boxSizeH,
+                          len(gamePlay.mapping) - 1)
+        colLeft = clamp(0, int(self.x - gamePlay.mapstartX - 36) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
+        colRight = clamp(0, int(self.x - gamePlay.mapstartX + 36) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
+        if gamePlay.mapping[rawTop][colLeft] != 0 or gamePlay.mapping[rawTop][colRight] != 0 or \
+                gamePlay.mapping[rawBottom][colLeft] != 0 or gamePlay.mapping[rawBottom][colRight] != 0:
+            self.x = self.oldX
+            self.y = self.oldY
+        else:
+            self.oldX = self.x
+            self.oldY = self.y
+
+        # moving camera
+        if gamePlay.MAINMAP:
+            if 0 < self.x - gamePlay.cameraLEFT < 300 and self.dirX < 0:
+                gamePlay.cameraLEFT += -1 * 25
+            elif 1200 > self.x - gamePlay.cameraLEFT > 1200 - 300 and self.dirX > 0:
+                gamePlay.cameraLEFT += 1 * 25
+            elif 0 < self.y - gamePlay.cameraBOTTOM < 300 and self.dirY < 0:
+                gamePlay.cameraBOTTOM += -1 * 25
+            elif 800 > self.y - gamePlay.cameraBOTTOM > 800 - 300 and self.dirY > 0:
+                gamePlay.cameraBOTTOM += 1 * 25
+            gamePlay.cameraLEFT = clamp(0, gamePlay.cameraLEFT, gamePlay.WIDTH - gamePlay.viewWIDHT)
+            gamePlay.cameraBOTTOM = clamp(0, gamePlay.cameraBOTTOM, gamePlay.HEIGHT - gamePlay.viewHEIGHT)
+
+        row = clamp(0,
+                    int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY) // gamePlay.boxSizeH + Looking[self.faceDir][0],
+                    len(gamePlay.mapping) - 1)
+        col = clamp(0, int(self.x - gamePlay.mapstartX) // gamePlay.boxSizeW + Looking[self.faceDir][1],
+                    len(gamePlay.mapping[0]) - 1)
+        self.bubbleCheck()
+        if gamePlay.MAINMAP and (gamePlay.mapping[row][col] == 2 or gamePlay.mapping[row][col] == 2):
+            game_framework.push_state(marketMap)
+            self.x, self.y = 1736, gamePlay.HEIGHT - 100
+        elif not gamePlay.MAINMAP and (gamePlay.mapping[row][col] == 2 or gamePlay.mapping[row][col] == 2):
+            game_framework.pop_state()
+            self.x, self.y = 2236, gamePlay.HEIGHT - 1516
+
+    def draw(self):
+        self.character.clip_draw(self.frame * Pinn.pinnImageX,
+                                 (2016 - Pinn.pinnImageY * (self.line + 1)),
+                                 Pinn.pinnImageX, Pinn.pinnImageY,
+                                 self.x - gamePlay.cameraLEFT,
+                                 self.y + Pinn.pinnImageX / 2 - 20 - gamePlay.cameraBOTTOM)
+
+
+class INTERACTION:
+    def enter(self, event):
+        row = clamp(0,
+                    int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY) // gamePlay.boxSizeH + Looking[self.faceDir][0],
+                    len(gamePlay.mapping) - 1)
+        col = clamp(0, int(self.x - gamePlay.mapstartX) // gamePlay.boxSizeW + Looking[self.faceDir][1],
+                    len(gamePlay.mapping[0]) - 1)
+        something = gamePlay.mapping[row][col]
+        #
+        if type(something) == objectClass.interactionTOOL and not gamePlay.MAINMAP:
+            if something.bubbleimage is not None:
+                game_framework.push_state(marketFramework)
+
+    def exit(self):
+        pass
+
+    def do(self):
+        pass
+
+    def draw(self):
+        pass
+
+next_state = {
+    IDLE:  {RU: RUN,  LU: RUN,  RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN, SPACE: INTERACTION, STOP: IDLE},
+    RUN:   {RU: RUN, LU: RUN, RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN, SPACE: INTERACTION, STOP: IDLE},
+    INTERACTION: {RU: RUN, LU: RUN, RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN, SPACE: INTERACTION, STOP: IDLE},
+}
 
 
 class Pinn:
     pinnImage = 'character1.6\\pinn.png'
-    pinnImageX = 147
+    pinnImageX = 148
     pinnImageY = 224
     coffee = 'order\\bubble\\bean.png'
     blood = 'order\\bubble\\blood.png'
@@ -20,37 +205,33 @@ class Pinn:
 
     def __init__(self):
         self.character = load_image(Pinn.pinnImage)
-        self.stopMoving = True
         self.frame = 0
-        self.x = WIDTH // 2 - 100
-        self.y = HEIGHT // 2
+        self.x = gamePlay.WIDTH // 2 - 100
+        self.y = gamePlay.HEIGHT // 2 - 100
         self.down = self.y - 35
         self.oldX = self.x
         self.oldY = self.y
         self.dirX = 0
         self.dirY = 0
         self.line = 0
-        self.stop = 0
+        self.faceDir = 0
         self.item = None
         self.bubble = None
         self.something = None
 
-    def handle_events(self, event):
-        raw = int(HEIGHT - self.y - mapstartY) // boxSizeH + Looking[self.stop][0]
-        col = int(self.x - mapstartX) // boxSizeW + Looking[self.stop][1]
+        self.event_que = []
+        self.cur_state = IDLE
+        self.cur_state.enter(self, None)
 
-        if event.type == SDL_KEYDOWN:
-            self.stopMoving = False
-            if event.key == SDLK_RIGHT:
-                self.dirX += 1
-            elif event.key == SDLK_LEFT:
-                self.dirX -= 1
-            elif event.key == SDLK_UP:
-                self.dirY += 1
-            elif event.key == SDLK_DOWN:
-                self.dirY -= 1
-            elif event.key == SDLK_SPACE:
-                pass
+    def add_event(self, event):
+        self.event_que.insert(0, event)
+
+    def handle_events(self, event):
+        if (event.type, event.key) in key_event_table:
+            key_event = key_event_table[(event.type, event.key)]
+            self.add_event(key_event)
+
+
                 # object = mapping[raw][col]
 
                 # match type(object):
@@ -95,61 +276,11 @@ class Pinn:
                 #             self.cup = None
                 #             self.item = None
 
-        elif event.type == SDL_KEYUP:
-            if event.key == SDLK_RIGHT:
-                self.dirX -= 1
-            elif event.key == SDLK_LEFT:
-                self.dirX += 1
-            elif event.key == SDLK_UP:
-                self.dirY -= 1
-            elif event.key == SDLK_DOWN:
-                self.dirY += 1
-
-    def LineSet(self):
-        match (self.dirX, self.dirY):
-            case (1, 1):
-                self.line = 8
-                self.stop = 3
-            case (-1, 1):
-                self.line = 7
-                self.stop = 5
-            case (-1, -1):
-                self.line = 2
-                self.stop = 7
-            case (1, -1):
-                self.line = 3
-                self.stop = 1
-            case (0, 1):
-                self.line = 6
-                self.stop = 4
-            case (0, -1):
-                self.line = 1
-                self.stop = 0
-            case (1, 0):
-                self.line = 5
-                self.stop = 2
-            case (-1, 0):
-                self.line = 4
-                self.stop = 6
-            case (0, 0):
-                self.line = 0
-                self.frame = 0
-                self.stopMoving = True
-
     def draw(self):
-        if self.stopMoving:
-            self.character.clip_draw(self.stop * Pinn.pinnImageX,
-                                     (2016 - Pinn.pinnImageY * (self.line + 1)),
-                                     Pinn.pinnImageX, Pinn.pinnImageY,
-                                     self.x - std.cameraLEFT,
-                                     self.y + Pinn.pinnImageY / 2 - 45 - std.cameraBOTTOM)
-        elif not self.stopMoving:
-            self.character.clip_draw(self.frame * Pinn.pinnImageX,
-                                     (2016 - Pinn.pinnImageY * (self.line + 1)),
-                                     Pinn.pinnImageX, Pinn.pinnImageY,
-                                     self.x - std.cameraLEFT,
-                                     self.y + Pinn.pinnImageX / 2 - 45 - std.cameraBOTTOM)
-            self.frame = (self.frame + 1) % 6
+        self.cur_state.draw(self)
+        debug_print('PPPP')
+        debug_print(f'Face Dir: {self.faceDir}, DirX: {self.dirX}, DirY: {self.dirY}')
+
         # if self.item is not None:
         #     match self.item:
         #         case 'shot':
@@ -163,83 +294,41 @@ class Pinn:
 
         # 입체감
 
-    def update(self):
-
-        self.down = self.y - 35
-        if self.dirX * self.dirY != 0:
-            self.x += self.dirX * 25 * (1 / math.sqrt(2))
-            self.y += self.dirY * 25 * (1 / math.sqrt(2))
-        else:
-            self.x += self.dirX * 25
-            self.y += self.dirY * 25
-        self.x = clamp(50, self.x, WIDTH - 50)
-        self.y = clamp(20, self.y, HEIGHT - 20)
-        rawTop = int(HEIGHT - self.y - mapstartY + 10) // boxSizeH
-        rawBottom = int(HEIGHT - self.y - mapstartY - 10) // boxSizeH
-        colLeft = int(self.x - mapstartX - 20) // boxSizeW
-        colRight = int(self.x - mapstartX + 20) // boxSizeW
-        if mapping[rawTop][colLeft] != 0 or mapping[rawTop][colRight] != 0 or \
-                mapping[rawBottom][colLeft] != 0 or mapping[rawBottom][colRight] != 0:
-            self.x = self.oldX
-            self.y = self.oldY
-        else:
-            self.oldX = self.x
-            self.oldY = self.y
-
-        if MAINMAP:
-            if 0 < self.x - std.cameraLEFT < 300 and self.dirX < 0:
-                std.cameraLEFT += -1 * 25
-            elif 1200 > self.x - std.cameraLEFT > 1200 - 300 and self.dirX > 0:
-                std.cameraLEFT += 1 * 25
-            elif 0 < self.y - std.cameraBOTTOM < 300 and self.dirY < 0:
-                std.cameraBOTTOM += -1 * 25
-            elif 800 > self.y - std.cameraBOTTOM > 800 - 300 and self.dirY > 0:
-                std.cameraBOTTOM += 1 * 25
-            std.cameraLEFT = clamp(0, std.cameraLEFT, WIDTH - viewWIDHT)
-            std.cameraBOTTOM = clamp(0, std.cameraBOTTOM, HEIGHT - viewHEIGHT)
-
-        if 0 <= int(HEIGHT - self.y - mapstartY) // boxSizeH + Looking[self.stop][0] <= len(mapping) - 1 and\
-            0 <= int(self.x - mapstartX) // boxSizeW + Looking[self.stop][1] <= len(mapping[0]) - 1:
-            something = mapping[int(HEIGHT - self.y - mapstartY) // boxSizeH + Looking[self.stop][0]][
-                int(self.x - mapstartX) // boxSizeW + Looking[self.stop][1]]
-
-        # 버블 발생 여부
-            if something != self.something:
-                if self.bubble is not None:
-                    AllObjectClass.remove_object(self.bubble)
-                    self.bubble = None
-                if type(something) == objectClass.interactionTOOL:
-                    if something.bubbleimage is not None:
+    def bubbleCheck(self):
+        # bubble checking
+        row = clamp(0,
+                    int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY) // gamePlay.boxSizeH + Looking[self.faceDir][0],
+                    len(gamePlay.mapping) - 1)
+        col = clamp(0, int(self.x - gamePlay.mapstartX) // gamePlay.boxSizeW + Looking[self.faceDir][1],
+                    len(gamePlay.mapping[0]) - 1)
+        something = gamePlay.mapping[row][col]
+        if something != self.something:
+            if self.bubble is not None:
+                AllObjectClass.remove_object(self.bubble)
+                self.bubble = None
+            if type(something) == objectClass.interactionTOOL:
+                if something.bubbleimage is not None:
+                    if gamePlay.MAINMAP:
                         self.bubble = objectClass.Bubble(
-                            something.x, something.y + something.height / 2 + 30,
-                            something.bubbleimage, something.bubbleSize)
+                            something.x, something.y + something.height / 2 + 60,
+                            something.bubbleimage, something.bubbleSize, something.bubbleframe)
                         AllObjectClass.add_object(self.bubble, 2)
+                    else:
+                        self.bubble = objectClass.Bubble(
+                            something.x, something.y + something.height / 4,
+                            something.bubbleimage, something.bubbleSize, something.bubbleframe)
+                        AllObjectClass.add_object(self.bubble, 2)
+        self.something = something
 
-            self.something = something
+    def update(self):
+        self.cur_state.do(self)
+        if self.event_que:
+            event = self.event_que.pop()
+            self.cur_state.exit(self)
+            try:
+                self.cur_state = next_state[self.cur_state][event]
+            except KeyError:
+                # print(f'Error: State {self.cur_state.__name__}    Event{event_name[event]}')
+                print('ERROR', self.cur_state.__name__, ' ', event_name[event])
+            self.cur_state.enter(self, event)
 
-
-        self.LineSet()
-
-class IDLE:
-    def enter(self):
-        pass
-    def exit(self):
-        pass
-    def do(self):
-        pass
-    def draw(self):
-        pass
-
-
-class RUN:
-    def enter(self):
-        pass
-
-    def exit(self):
-        pass
-
-    def do(self):
-        pass
-
-    def draw(self):
-        pass
