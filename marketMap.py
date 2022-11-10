@@ -62,7 +62,7 @@ def update():
 def handle_events():
     events = get_events()
     for event in events:
-        if event.type == SDL_QUIT or event.key == SDLK_ESCAPE:
+        if event.type == SDL_QUIT:
             game_framework.quit()
         else:
             gamePlay.pinn.handle_events(event)
@@ -76,7 +76,6 @@ def draw():
         object.draw()
 
     update_canvas()
-    delay(0.05)
 
 
 

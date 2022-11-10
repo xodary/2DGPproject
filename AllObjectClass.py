@@ -5,8 +5,9 @@
 # layer 2: bubble Object
 # layer 3: bills
 # layer 4: UI Background
-# lyaer 5: UI
-objects = [[], [], [], [], [], []]
+# layer 5: UI
+# layer 6: UI clicking
+objects = [[], [], [], [], [], [], []]
 
 def add_object(o, depth):
     objects[depth].append(o)

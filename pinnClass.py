@@ -13,8 +13,8 @@ import marketFramework
 running = True
 Looking = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
 
-RD, LD, RU, LU, ND, SD, NU, SU, STOP, SPACE = range(10)
-event_name = ['RD', 'LD', 'RU', 'LU', 'ND', 'SD', 'NU', 'SU', 'STOP', 'SPACE']
+RD, LD, RU, LU, ND, SD, NU, SU, STOP, SPACE, ESC = range(11)
+event_name = ['RD', 'LD', 'RU', 'LU', 'ND', 'SD', 'NU', 'SU', 'STOP', 'SPACE', 'ESC']
 
 key_event_table = {
     (SDL_KEYDOWN, SDLK_SPACE): SPACE,
@@ -25,7 +25,8 @@ key_event_table = {
     (SDL_KEYDOWN, SDLK_UP): ND,
     (SDL_KEYDOWN, SDLK_DOWN): SD,
     (SDL_KEYUP, SDLK_UP): NU,
-    (SDL_KEYUP, SDLK_DOWN): SU
+    (SDL_KEYUP, SDLK_DOWN): SU,
+    (SDL_KEYDOWN, SDLK_ESCAPE): ESC,
 }
 
 
@@ -106,15 +107,15 @@ class RUN:
         print('Exit RUN')
 
     def do(self):
-        self.frame = (self.frame + 1) % 6
+        self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 6
         # move checking
         self.down = self.y - 35
         if self.dirX * self.dirY != 0:
-            self.x += self.dirX * 25 * (1 / math.sqrt(2))
-            self.y += self.dirY * 25 * (1 / math.sqrt(2))
+            self.x += self.dirX * RUN_SPEED_PPS * game_framework.frame_time * (1 / math.sqrt(2))
+            self.y += self.dirY * RUN_SPEED_PPS * game_framework.frame_time * (1 / math.sqrt(2))
         else:
-            self.x += self.dirX * 25
-            self.y += self.dirY * 25
+            self.x += self.dirX * RUN_SPEED_PPS * game_framework.frame_time
+            self.y += self.dirY * RUN_SPEED_PPS * game_framework.frame_time
         self.x = clamp(50, self.x, gamePlay.WIDTH - 50)
         self.y = clamp(20, self.y, gamePlay.HEIGHT - 20)
         rawTop = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY + 13) // gamePlay.boxSizeH,
@@ -133,16 +134,20 @@ class RUN:
 
         # moving camera
         if gamePlay.MAINMAP:
-            if 0 < self.x - gamePlay.cameraLEFT < 300 and self.dirX < 0:
-                gamePlay.cameraLEFT += -1 * 25
-            elif 1200 > self.x - gamePlay.cameraLEFT > 1200 - 300 and self.dirX > 0:
-                gamePlay.cameraLEFT += 1 * 25
-            elif 0 < self.y - gamePlay.cameraBOTTOM < 300 and self.dirY < 0:
-                gamePlay.cameraBOTTOM += -1 * 25
-            elif 800 > self.y - gamePlay.cameraBOTTOM > 800 - 300 and self.dirY > 0:
-                gamePlay.cameraBOTTOM += 1 * 25
-            gamePlay.cameraLEFT = clamp(0, gamePlay.cameraLEFT, gamePlay.WIDTH - gamePlay.viewWIDHT)
-            gamePlay.cameraBOTTOM = clamp(0, gamePlay.cameraBOTTOM, gamePlay.HEIGHT - gamePlay.viewHEIGHT)
+            if (0 < self.x - gamePlay.cameraLEFT < 300 and self.dirX < 0) or \
+                    (1200 > self.x - gamePlay.cameraLEFT > 1200 - 300 and self.dirX > 0):
+                if self.dirX * self.dirY != 0:
+                    gamePlay.cameraLEFT += self.dirX * RUN_SPEED_PPS * game_framework.frame_time * (1 / math.sqrt(2))
+                else:
+                    gamePlay.cameraLEFT += self.dirX * RUN_SPEED_PPS * game_framework.frame_time
+            elif (0 < self.y - gamePlay.cameraBOTTOM < 300 and self.dirY < 0) or \
+                    (800 > self.y - gamePlay.cameraBOTTOM > 800 - 300 and self.dirY > 0):
+                if self.dirX * self.dirY != 0:
+                    gamePlay.cameraBOTTOM += self.dirY * RUN_SPEED_PPS * game_framework.frame_time * (1 / math.sqrt(2))
+                else:
+                    gamePlay.cameraBOTTOM += self.dirY * RUN_SPEED_PPS * game_framework.frame_time
+            gamePlay.cameraLEFT = clamp(0, int(gamePlay.cameraLEFT), gamePlay.WIDTH - gamePlay.viewWIDHT)
+            gamePlay.cameraBOTTOM = clamp(0, int(gamePlay.cameraBOTTOM), gamePlay.HEIGHT - gamePlay.viewHEIGHT)
 
         row = clamp(0,
                     int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY) // gamePlay.boxSizeH + Looking[self.faceDir][0],
@@ -158,7 +163,7 @@ class RUN:
             self.x, self.y = 2236, gamePlay.HEIGHT - 1516
 
     def draw(self):
-        self.character.clip_draw(self.frame * Pinn.pinnImageX,
+        self.character.clip_draw(int(self.frame) * Pinn.pinnImageX,
                                  (2016 - Pinn.pinnImageY * (self.line + 1)),
                                  Pinn.pinnImageX, Pinn.pinnImageY,
                                  self.x - gamePlay.cameraLEFT,
@@ -167,6 +172,10 @@ class RUN:
 
 class INTERACTION:
     def enter(self, event):
+        print('Enter INTERACTION')
+        self.line = 0
+        self.dirX = 0
+        self.dirY = 0
         row = clamp(0,
                     int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY) // gamePlay.boxSizeH + Looking[self.faceDir][0],
                     len(gamePlay.mapping) - 1)
@@ -179,20 +188,33 @@ class INTERACTION:
                 game_framework.push_state(marketFramework)
 
     def exit(self):
-        pass
+        print('Exit INTERACTION')
 
     def do(self):
         pass
 
     def draw(self):
-        pass
+        self.character.clip_draw(self.faceDir * Pinn.pinnImageX,
+                                 (2016 - Pinn.pinnImageY * (self.line + 1)),
+                                 Pinn.pinnImageX, Pinn.pinnImageY,
+                                 self.x - gamePlay.cameraLEFT,
+                                 self.y + Pinn.pinnImageY / 2 - 45 - gamePlay.cameraBOTTOM)
 
 next_state = {
     IDLE:  {RU: RUN,  LU: RUN,  RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN, SPACE: INTERACTION, STOP: IDLE},
     RUN:   {RU: RUN, LU: RUN, RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN, SPACE: INTERACTION, STOP: IDLE},
-    INTERACTION: {RU: RUN, LU: RUN, RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN, SPACE: INTERACTION, STOP: IDLE},
+    INTERACTION: {RU: RUN, LU: RUN, RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN,
+                  SPACE: INTERACTION, STOP: IDLE, ESC: IDLE},
 }
 
+PIXEL_PER_METER = 10.0 / 0.1
+RUN_SPEED_KMPH = 20.0
+RUN_SPEED_MPM = RUN_SPEED_KMPH * 1000.0 / 60.6
+RUN_SPEED_MPS = RUN_SPEED_MPM / 60.0
+RUN_SPEED_PPS = RUN_SPEED_MPS * PIXEL_PER_METER
+TIME_PER_ACTION = 0.15
+ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+FRAMES_PER_ACTION = 2
 
 class Pinn:
     pinnImage = 'character1.6\\pinn.png'
@@ -308,16 +330,8 @@ class Pinn:
                 self.bubble = None
             if type(something) == objectClass.interactionTOOL:
                 if something.bubbleimage is not None:
-                    if gamePlay.MAINMAP:
-                        self.bubble = objectClass.Bubble(
-                            something.x, something.y + something.height / 2 + 60,
-                            something.bubbleimage, something.bubbleSize, something.bubbleframe)
-                        AllObjectClass.add_object(self.bubble, 2)
-                    else:
-                        self.bubble = objectClass.Bubble(
-                            something.x, something.y + something.height / 4,
-                            something.bubbleimage, something.bubbleSize, something.bubbleframe)
-                        AllObjectClass.add_object(self.bubble, 2)
+                    self.bubble = objectClass.Bubble(*something.makeBubble())
+                    AllObjectClass.add_object(self.bubble, 2)
         self.something = something
 
     def update(self):

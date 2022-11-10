@@ -6,6 +6,7 @@ from objectClass import *
 import AllObjectClass
 import game_framework
 
+myitem = None
 mapping = None
 MainMapPlusX, MainMapPlusY = None, None
 MAINMAP = None
@@ -18,7 +19,7 @@ mapstartX = None
 mapstartY = None
 
 def enter():
-    global mapping, MainMapPlusX, MainMapPlusY, MAINMAP
+    global mapping, MainMapPlusX, MainMapPlusY, MAINMAP, myitem
     mapping = [  # 12 + 16 * 2 = 44 // 9 * 3 + 1 = 28
         [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
          1, 0, 0, 1, 1, 1, 0],
@@ -78,6 +79,14 @@ def enter():
          1, 2, 2, 2, 1, 1, 1],
     ]
     MainMapPlusX, MainMapPlusY = 18, 9
+    myitem = [
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+    ]
 
     global WIDTH, HEIGHT, cameraLEFT, cameraBOTTOM, viewWIDHT, viewHEIGHT, boxSizeW, boxSizeH, mapstartX, mapstartY
     MAINMAP = True
@@ -143,7 +152,7 @@ def update():
 def handle_events():
     events = get_events()
     for event in events:
-        if event.type == SDL_QUIT or event.key == SDLK_ESCAPE:
+        if event.type == SDL_QUIT:
             game_framework.quit()
         else:
             pinn.handle_events(event)
@@ -168,7 +177,6 @@ def draw():
     #             Latte.draw(100 + index * 173, HEIGHT + QueueTime[index])
 
     update_canvas()
-    delay(0.05)
 
 
 def exit():
@@ -280,14 +288,13 @@ def resume():
     AllObjectClass.add_objects(chairs, 1)
     trashes = [interactionTOOL(2, 4, 1, 1, 56, 94, 'map1.6\\trash.png')]
     AllObjectClass.add_objects(trashes, 1)
-    machines = [interactionTOOL(0, 0, 2, 1, 84, 194, 'map1.6\\machine.png', "order\\bubble\\coffeebubbleSprite.png")]
+    machines = [interactionTOOL(0, 0, 2, 1, 84, 194, 'map1.6\\machine.png', "bubble\\coffee.png")]
     AllObjectClass.add_objects(machines, 1)
-    blood = [interactionTOOL(2, 0, 2, 1, 73, 249, 'map1.6\\water.png', 'order\\bubble\\blood.png')]
+    blood = [interactionTOOL(2, 0, 2, 1, 73, 249, 'map1.6\\water.png', 'bubble\\blood.png')]
     AllObjectClass.add_objects(blood, 1)
-    milkBox = [interactionTOOL(4, 0, 2, 1, 81, 142, 'map1.6\\milkBox.png', 'order\\bubble\\milkbubbleSprite.png')]
+    milkBox = [interactionTOOL(4, 0, 2, 1, 81, 142, 'map1.6\\milkBox.png', 'bubble\\milk.png')]
     AllObjectClass.add_objects(milkBox, 1)
-    cuptablesSmall = [
-        interactionTOOL(8, 0, 2, 1, 99, 174, 'map1.6\\cuptableSmall.png', 'order\\bubble\\coffeebubble.png', 96)]
+    cuptablesSmall = [interactionTOOL(8, 0, 2, 1, 99, 174, 'map1.6\\cuptableSmall.png', 'bubble\\cup.png')]
     AllObjectClass.add_objects(cuptablesSmall, 1)
     # cup 36 34
     # carpet 638 278
