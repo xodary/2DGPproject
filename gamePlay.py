@@ -6,20 +6,19 @@ from objectClass import *
 import AllObjectClass
 import game_framework
 
-myitem = None
 mapping = None
 MainMapPlusX, MainMapPlusY = None, None
 MAINMAP = None
 WIDTH, HEIGHT = None, None
 cameraLEFT, cameraBOTTOM = None, None
-viewWIDHT, viewHEIGHT = None, None
+viewWIDTH, viewHEIGHT = None, None
 boxSizeW = None
 boxSizeH = None
 mapstartX = None
 mapstartY = None
 
 def enter():
-    global mapping, MainMapPlusX, MainMapPlusY, MAINMAP, myitem
+    global mapping, MainMapPlusX, MainMapPlusY, MAINMAP
     mapping = [  # 12 + 16 * 2 = 44 // 9 * 3 + 1 = 28
         [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
          1, 0, 0, 1, 1, 1, 0],
@@ -79,20 +78,13 @@ def enter():
          1, 2, 2, 2, 1, 1, 1],
     ]
     MainMapPlusX, MainMapPlusY = 18, 9
-    myitem = [
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],
-    ]
 
-    global WIDTH, HEIGHT, cameraLEFT, cameraBOTTOM, viewWIDHT, viewHEIGHT, boxSizeW, boxSizeH, mapstartX, mapstartY
+
+    global WIDTH, HEIGHT, cameraLEFT, cameraBOTTOM, viewWIDTH, viewHEIGHT, boxSizeW, boxSizeH, mapstartX, mapstartY
     MAINMAP = True
     WIDTH, HEIGHT = 2560, 1600
     cameraLEFT, cameraBOTTOM = 640, 320
-    viewWIDHT, viewHEIGHT = 1920, 1280
+    viewWIDTH, viewHEIGHT = 1920, 1280
     boxSizeW = 56
     boxSizeH = 56
     mapstartX = 54
@@ -138,6 +130,7 @@ def enter():
     AllObjectClass.add_objects(milkBox, 1)
     cuptablesSmall = [interactionTOOL(8, 0, 2, 1, 99, 174, 'map1.6\\cuptableSmall.png', 'bubble\\cup.png')]
     AllObjectClass.add_objects(cuptablesSmall, 1)
+    gamePlay.pinn.inventoryTest()
     # cup 36 34
     # carpet 638 278
     # signal 320 80
@@ -248,7 +241,7 @@ def resume():
     ]
     MainMapPlusX, MainMapPlusY = 18, 9
 
-    global WIDTH, HEIGHT, cameraLEFT, cameraBOTTOM, viewWIDHT, viewHEIGHT, boxSizeW, boxSizeH, mapstartX, mapstartY
+    global WIDTH, HEIGHT, cameraLEFT, cameraBOTTOM, viewWIDTH, viewHEIGHT, boxSizeW, boxSizeH, mapstartX, mapstartY
     MAINMAP = True
     WIDTH, HEIGHT = 2560, 1600
     cameraLEFT, cameraBOTTOM = 640, 0
@@ -296,6 +289,7 @@ def resume():
     AllObjectClass.add_objects(milkBox, 1)
     cuptablesSmall = [interactionTOOL(8, 0, 2, 1, 99, 174, 'map1.6\\cuptableSmall.png', 'bubble\\cup.png')]
     AllObjectClass.add_objects(cuptablesSmall, 1)
+    gamePlay.pinn.inventoryTest()
     # cup 36 34
     # carpet 638 278
     # signal 320 80

@@ -1,7 +1,7 @@
-import pinnClass
+
 from std import *
 from pico2d import *
-from pinnClass import *
+import pinnClass
 # from zombieClass import *
 from objectClass import *
 import AllObjectClass
@@ -18,19 +18,15 @@ button = 0
 x, y = 0, 0
 def enter():
     global Menu
-    Menu = WALL(0, 0, 1920, 1280, 'UI\\marketUI.png')
+    Menu = marketClass.marketUI()
     AllObjectClass.add_object(Menu, 4)
     global itemList
-    cup = marketClass.marketSell('UI\\cupSell.png', 'UI\\minicup.png', 'UI\\cupmini.png', 189, 270, 750, 121, 1, 1)
-    milk = marketClass.marketSell('UI\\milkSell.png', 'UI\\minicup.png', 'UI\\cupmini.png', 189, 735, 750, 230, 1, 2)
-    machine = marketClass.marketSell('UI\\machineSell.png', 'UI\\minicup.png', 'UI\\cupmini.png', 189, 408, 750, 300, 1, 2)
+    cup = marketClass.marketSell('UI\\cupSell.png', 'UI\\cupmini.png', 'UI\\cupInven.png', 189, 270, 750, 121, 1, 1)
+    milk = marketClass.marketSell('UI\\milkSell.png', 'UI\\cupmini.png', 'UI\\cupInven.png', 189, 735, 750, 230, 1, 2)
+    machine = marketClass.marketSell('UI\\machineSell.png', 'UI\\cupmini.png', 'UI\\cupInven.png', 189, 408, 750, 300, 1, 2)
     itemList.append([cup, milk, machine])
     AllObjectClass.add_objects(itemList[button], 5)
-    for items in gamePlay.myitem:
-        for item in items:
-            if type(item) == marketClass.miniMarket:
-                itemImages.append(item)
-                AllObjectClass.add_object(item, 5)
+
 
 def update():
     # for object in AllObjectClass.all_objects():

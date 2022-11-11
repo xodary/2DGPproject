@@ -85,7 +85,9 @@ class BackGround:
     def update(self):
         pass
     def draw(self):
-        self.image.clip_draw(gamePlay.cameraLEFT, gamePlay.cameraBOTTOM, gamePlay.viewWIDHT, gamePlay.viewHEIGHT, gamePlay.viewWIDHT / 2, gamePlay.viewHEIGHT / 2)
+        self.image.clip_draw(gamePlay.cameraLEFT, gamePlay.cameraBOTTOM,
+                             gamePlay.viewWIDTH, gamePlay.viewHEIGHT,
+                             gamePlay.viewWIDTH // 2, gamePlay.viewHEIGHT // 2)
 class TABLE(interactionTOOL):
     def __init__(self, xIndex, yIndex, wIndex, hIndex, width, height, pngName, itemBubble=None, bubbleSize=80):
         super().__init__(xIndex, yIndex, wIndex, hIndex, width, height, pngName, itemBubble, bubbleSize)

@@ -1,4 +1,7 @@
+import random
+
 import game_framework
+import marketClass
 import std
 from std import *
 from pico2d import *
@@ -13,8 +16,8 @@ import marketFramework
 running = True
 Looking = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
 
-RD, LD, RU, LU, ND, SD, NU, SU, STOP, SPACE, ESC = range(11)
-event_name = ['RD', 'LD', 'RU', 'LU', 'ND', 'SD', 'NU', 'SU', 'STOP', 'SPACE', 'ESC']
+RD, LD, RU, LU, ND, SD, NU, SU, STOP, SPACE, ESC, INVEN = range(12)
+event_name = ['RD', 'LD', 'RU', 'LU', 'ND', 'SD', 'NU', 'SU', 'STOP', 'SPACE', 'ESC', 'INVEN']
 
 key_event_table = {
     (SDL_KEYDOWN, SDLK_SPACE): SPACE,
@@ -27,6 +30,7 @@ key_event_table = {
     (SDL_KEYUP, SDLK_UP): NU,
     (SDL_KEYUP, SDLK_DOWN): SU,
     (SDL_KEYDOWN, SDLK_ESCAPE): ESC,
+    (SDL_KEYDOWN, SDLK_e): INVEN,
 }
 
 
@@ -35,11 +39,19 @@ class IDLE:
     def enter(self, event):
         print('Enter IDLE')
         self.line = 0
+        if event == INVEN:
+            if self.inven != None:
+                AllObjectClass.remove_object(self.inven)
+                self.inven = None
+            else:
+                self.inven = marketClass.Inventory()
+                AllObjectClass.add_object(self.inven, 6)
     def exit(self):
         pass
     def do(self):
         self.bubbleCheck()
     def draw(self):
+
         self.character.clip_draw(self.faceDir * Pinn.pinnImageX,
                                  (2016 - Pinn.pinnImageY * (self.line + 1)),
                                  Pinn.pinnImageX, Pinn.pinnImageY,
@@ -73,6 +85,13 @@ class RUN:
         elif event == SU:
             self.dirY += 1
             print('Enter SU')
+        elif event == INVEN:
+            if self.inven != None:
+                AllObjectClass.remove_object(self.inven)
+                self.inven = None
+            else:
+                self.inven = marketClass.Inventory()
+                AllObjectClass.add_object(self.inven, 6)
         self.frame = 0
 
         match (self.dirX, self.dirY):
@@ -111,11 +130,13 @@ class RUN:
         # move checking
         self.down = self.y - 35
         if self.dirX * self.dirY != 0:
-            self.x += self.dirX * RUN_SPEED_PPS * game_framework.frame_time * (1 / math.sqrt(2))
-            self.y += self.dirY * RUN_SPEED_PPS * game_framework.frame_time * (1 / math.sqrt(2))
+            self.x += self.dirX * RUN_SPEED_PPS * game_framework.frame_time * (1 / math.sqrt(2)) * \
+                        float(random.randint(8, 11) / 10)
+            self.y += self.dirY * RUN_SPEED_PPS * game_framework.frame_time * (1 / math.sqrt(2)) * \
+                      float(random.randint(8, 11) / 10)
         else:
-            self.x += self.dirX * RUN_SPEED_PPS * game_framework.frame_time
-            self.y += self.dirY * RUN_SPEED_PPS * game_framework.frame_time
+            self.x += self.dirX * RUN_SPEED_PPS * game_framework.frame_time * float(random.randint(8, 11) / 10)
+            self.y += self.dirY * RUN_SPEED_PPS * game_framework.frame_time * float(random.randint(8, 11) / 10)
         self.x = clamp(50, self.x, gamePlay.WIDTH - 50)
         self.y = clamp(20, self.y, gamePlay.HEIGHT - 20)
         rawTop = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY + 13) // gamePlay.boxSizeH,
@@ -146,7 +167,7 @@ class RUN:
                     gamePlay.cameraBOTTOM += self.dirY * RUN_SPEED_PPS * game_framework.frame_time * (1 / math.sqrt(2))
                 else:
                     gamePlay.cameraBOTTOM += self.dirY * RUN_SPEED_PPS * game_framework.frame_time
-            gamePlay.cameraLEFT = clamp(0, int(gamePlay.cameraLEFT), gamePlay.WIDTH - gamePlay.viewWIDHT)
+            gamePlay.cameraLEFT = clamp(0, int(gamePlay.cameraLEFT), gamePlay.WIDTH - gamePlay.viewWIDTH)
             gamePlay.cameraBOTTOM = clamp(0, int(gamePlay.cameraBOTTOM), gamePlay.HEIGHT - gamePlay.viewHEIGHT)
 
         row = clamp(0,
@@ -174,8 +195,9 @@ class INTERACTION:
     def enter(self, event):
         print('Enter INTERACTION')
         self.line = 0
-        self.dirX = 0
-        self.dirY = 0
+        if not gamePlay.MAINMAP:
+            self.dirX = 0
+            self.dirY = 0
         row = clamp(0,
                     int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY) // gamePlay.boxSizeH + Looking[self.faceDir][0],
                     len(gamePlay.mapping) - 1)
@@ -185,6 +207,9 @@ class INTERACTION:
         #
         if type(something) == objectClass.interactionTOOL and not gamePlay.MAINMAP:
             if something.bubbleimage is not None:
+                if self.inven != None:
+                    AllObjectClass.remove_object(self.inven)
+                    self.inven = None
                 game_framework.push_state(marketFramework)
 
     def exit(self):
@@ -240,7 +265,7 @@ class Pinn:
         self.item = None
         self.bubble = None
         self.something = None
-
+        self.inven = None
         self.event_que = []
         self.cur_state = IDLE
         self.cur_state.enter(self, None)
@@ -346,3 +371,6 @@ class Pinn:
                 print('ERROR', self.cur_state.__name__, ' ', event_name[event])
             self.cur_state.enter(self, event)
 
+    def inventoryTest(self):
+        if self.inven:
+            AllObjectClass.add_object(self.inven, 6)
