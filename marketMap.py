@@ -49,9 +49,9 @@ def enter():
     AllObjectClass.add_object(gamePlay.pinn, 1)
     AllObjectClass.add_object(WALL(795, 770, 237, 165, 'map1.6\\flooranimal.png'), 0)
     AllObjectClass.add_object(interactionTOOL(0, 12, 4, 5, 252, 491, 'map1.6\\christmas.png'), 1)
-    AllObjectClass.add_object(interactionTOOL(13, 14, 8, 5, 420, 462, 'map1.6\\animalmarket.png', 'bubble\\signal.png'), 1)
-    AllObjectClass.add_object(interactionTOOL(7, 5, 7, 3, 387, 331, 'map1.6\\shop.png', 'bubble\\signal.png'), 1)
-    AllObjectClass.add_object(interactionTOOL(23, 6, 6, 2, 318, 339, 'map1.6\\shop2.png', 'bubble\\signal.png'), 1)
+    AllObjectClass.add_object(Store(13, 14, 8, 5, 420, 462, 'map1.6\\animalmarket.png', 1, 'bubble\\signal.png'), 1)
+    AllObjectClass.add_object(Store(7, 5, 7, 3, 387, 331, 'map1.6\\shop.png', 0, 'bubble\\signal.png'), 1)
+    AllObjectClass.add_object(Store(23, 6, 6, 2, 318, 339, 'map1.6\\shop2.png', 0, 'bubble\\signal.png'), 1)
     AllObjectClass.add_object(interactionTOOL(24, 13, 2, 2, 158, 232, 'map1.6\\tree.png'), 1)
     gamePlay.pinn.inventoryTest()
 

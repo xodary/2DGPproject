@@ -3,6 +3,7 @@ from std import *
 from pico2d import *
 import gamePlay
 import game_framework
+import marketFramework
 
 class interactionTOOL:
     def __init__(self, xIndex, yIndex, wIndex, hIndex, width, height,
@@ -29,12 +30,26 @@ class interactionTOOL:
         pass
 
     def makeBubble(self):
-        return self.x, self.y + self.height / 2 + 60, self.bubbleimage, self.bubbleSize
+        if self.bubbleimage != None:
+            return self.x, self.y + self.height / 2 + 60, self.bubbleimage, self.bubbleSize
 
     def draw(self):
         self.image.draw(self.x - gamePlay.cameraLEFT, self.y - gamePlay.cameraBOTTOM)
         # self.image.draw(self.x, self.y)
 
+
+class Store(interactionTOOL):
+    def __init__(self, xIndex, yIndex, wIndex, hIndex, width, height, pngName, sellingPoint, bubbleimage=None, bubbleSize=100):
+        super().__init__(xIndex, yIndex, wIndex, hIndex, width, height, pngName, bubbleimage, bubbleSize)
+        self.sellingPoint = sellingPoint
+    def makeBubble(self):
+        if self.bubbleimage != None:
+            return self.x, self.y + 60, self.bubbleimage, self.bubbleSize
+
+    def marketUIopen(self):
+        marketFramework.sellingPoint = self.sellingPoint
+        game_framework.push_state(marketFramework)
+        gamePlay.pinn.InventoryRemove()
 class Bubble:
     makingBubble = 'bubble\\makebubble.png'
     TIME_PER_ACTION = 0.2

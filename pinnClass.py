@@ -176,10 +176,10 @@ class RUN:
         col = clamp(0, int(self.x - gamePlay.mapstartX) // gamePlay.boxSizeW + Looking[self.faceDir][1],
                     len(gamePlay.mapping[0]) - 1)
         self.bubbleCheck()
-        if gamePlay.MAINMAP and (gamePlay.mapping[row][col] == 2 or gamePlay.mapping[row][col] == 2):
+        if gamePlay.MAINMAP and gamePlay.mapping[row][col] == 2:
             game_framework.push_state(marketMap)
             self.x, self.y = 1736, gamePlay.HEIGHT - 100
-        elif not gamePlay.MAINMAP and (gamePlay.mapping[row][col] == 2 or gamePlay.mapping[row][col] == 2):
+        elif not gamePlay.MAINMAP and gamePlay.mapping[row][col] == 2:
             game_framework.pop_state()
             self.x, self.y = 2236, gamePlay.HEIGHT - 1516
 
@@ -205,12 +205,8 @@ class INTERACTION:
                     len(gamePlay.mapping[0]) - 1)
         something = gamePlay.mapping[row][col]
         #
-        if type(something) == objectClass.interactionTOOL and not gamePlay.MAINMAP:
-            if something.bubbleimage is not None:
-                if self.inven != None:
-                    AllObjectClass.remove_object(self.inven)
-                    self.inven = None
-                game_framework.push_state(marketFramework)
+        if type(something) == objectClass.Store:
+            something.marketUIopen()
 
     def exit(self):
         print('Exit INTERACTION')
@@ -249,6 +245,14 @@ class Pinn:
     blood = 'order\\bubble\\blood.png'
     milk = 'order\\bubble\\milkbubble.png'
     cupBubble = 'order\\bubble\\cup.png'
+    myitems = [
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+        ]
 
     def __init__(self):
         self.character = load_image(Pinn.pinnImage)
@@ -353,10 +357,9 @@ class Pinn:
             if self.bubble is not None:
                 AllObjectClass.remove_object(self.bubble)
                 self.bubble = None
-            if type(something) == objectClass.interactionTOOL:
-                if something.bubbleimage is not None:
-                    self.bubble = objectClass.Bubble(*something.makeBubble())
-                    AllObjectClass.add_object(self.bubble, 2)
+            if type(something) == objectClass.interactionTOOL or type(something) == objectClass.Store:
+                self.bubble = objectClass.Bubble(*something.makeBubble())
+                AllObjectClass.add_object(self.bubble, 2)
         self.something = something
 
     def update(self):
@@ -374,3 +377,8 @@ class Pinn:
     def inventoryTest(self):
         if self.inven:
             AllObjectClass.add_object(self.inven, 6)
+
+    def InventoryRemove(self):
+        if self.inven != None:
+            AllObjectClass.remove_object(self.inven)
+            self.inven = None
