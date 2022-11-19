@@ -33,6 +33,12 @@ class interactionTOOL:
         if self.bubbleimage != None:
             return self.x, self.y + self.height / 2 + 60, self.bubbleimage, self.bubbleSize
 
+    def bubbleTest(self):
+        if self.bubbleimage:
+            return True
+        else:
+            return False
+
     def draw(self):
         self.image.draw(self.x - gamePlay.cameraLEFT, self.y - gamePlay.cameraBOTTOM)
         # self.image.draw(self.x, self.y)

@@ -24,33 +24,49 @@ def enter():
     AllObjectClass.add_object(Menu, 4)
     global selling, Buttons
     cup = marketClass.OrderBox('UI\\cupSell.png', 'UI\\cupBigIcon.png', 'UI\\cupSmallIcon.png',
-                               189, 270, 750, 121, 1, 1)
+                               189, 270, 750, 121, 1, 1, 0, 0)
     milk = marketClass.OrderBox('UI\\milkSell.png', 'UI\\milkBigIcon.png', 'UI\\milkSmallIcon.png',
-                                189, 735, 750, 230, 1, 2)
+                                189, 735, 750, 230, 1, 2, 0, 0)
     machine = marketClass.OrderBox('UI\\machineSell.png', 'UI\\machineBigIcon.png', 'UI\\machineSmallIcon.png',
-                                   189, 408, 750, 300, 1, 2)
+                                   189, 408, 750, 300, 1, 2, 0, 0)
     bin = marketClass.OrderBox('UI\\orderBin.png', 'UI\\binBigIcon.png', 'UI\\binSmallIcon.png',
-                               189, 270, 749, 147, 1, 1)
+                               189, 270, 749, 147, 1, 1, 0, 0)
     shelf = marketClass.OrderBox('UI\\orderShelf.png', 'UI\\shelfBigIcon.png', 'UI\\shelfSmallIcon.png',
-                                 189, 450, 749, 211, 2, 2)
+                                 189, 450, 749, 211, 2, 2, 0, 0)
+    tableList = [
+        [1,1,0],
+        [1,1,1]
+    ]
+    tableMapList = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    ]
     table = marketClass.OrderBox('UI\\orderTable.png', 'UI\\tableBigIcon.png', 'UI\\tableSmallIcon.png',
-                                 189, 700, 749, 197, 3, 2)
+                                 189, 700, 749, 197, 3, 2, 0, 0, tableList, tableMapList)
     blood = marketClass.OrderBox('UI\\orderBlood.png', 'UI\\bloodBigIcon.png', 'UI\\bloodSmallIcon.png',
-                                 189, 270, 749, 293, 1, 2)
+                                 189, 270, 749, 293, 1, 2, 0, 0)
     tree = marketClass.OrderBox('UI\\orderFingerTree.png', 'UI\\treeBigIcon.png', 'UI\\treeSmallIcon.png',
-                                 189, 600, 749, 302, 3, 3)
+                                 189, 600, 749, 302, 3, 3, 0, 0)
+    kitchenTableList = [
+        [0,0,1],
+        [1,1,1]
+    ]
     kitchenTable = marketClass.OrderBox('UI\\orderKitchenTable.png', 'UI\\kitchenTableBigIcon.png', 'UI\\kitchenTableSmallIcon.png',
-                                 189, 1000, 749, 295, 3, 2)
+                                 189, 270, 749, 295, 3, 2, 0, 0, kitchenTableList)
     cow = marketClass.OrderBox('UI\\orderCow.png', 'UI\\cowBigIcon.png', 'UI\\cowTableSmallIcon.png',
-                                 189, 270, 749, 182, 3, 2)
+                                 189, 270, 749, 182, 3, 2, 0, 0)
     chicken = marketClass.OrderBox('UI\\orderChicken.png', 'UI\\chickenBigIcon.png', 'UI\\chickenTableSmallIcon.png',
-                               189, 500, 749, 137, 3, 2)
-    Buttons = [marketClass.Button(0), marketClass.Button(1), marketClass.Button(2)]
+                               189, 500, 749, 137, 2, 2, 0, 0)
+    Buttons = [marketClass.Button(0), marketClass.Button(1), marketClass.Button(2), marketClass.Button(3)]
     AllObjectClass.add_objects(Buttons, 5)
     furniture = []
     furniture.append([cup, milk, machine])
     furniture.append([bin, shelf, table])
-    furniture.append([blood, tree, kitchenTable])
+    furniture.append([blood, tree])
+    furniture.append([kitchenTable])
     selling.append(furniture)
 
     animal = []

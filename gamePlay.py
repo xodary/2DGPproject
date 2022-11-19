@@ -129,10 +129,8 @@ def enter():
     # Latte = load_image('order\\Latte.png')
 
     global kitchenTables, tables, chairs, trashes, machines, bloods, milkBoxes, cuptablesSmall
-    kitchenTables = [[interactionTOOL(3, 4, 8, 1, 404, 115, "map1.6\\kitchenTable.png"),
-                      interactionTOOL(10, 0, 2, 5, 73, 315, "map1.6\\kitchenTableright.png")]]
-    for t in kitchenTables:
-        AllObjectClass.add_objects(t, 1)
+    kitchenTables = [interactionTOOL(3, 0, 10, 5, 477, 315, "map1.6\\kitchenTable.png")]
+    AllObjectClass.add_objects(kitchenTables, 1)
     tables = [TABLE(12, 1, 2, 2, 100, 104,  'map1.6\\table.png'),
               TABLE(12, 6, 2, 2, 100, 104,  'map1.6\\table.png')]
     AllObjectClass.add_objects(tables, 1)
@@ -277,8 +275,7 @@ def resume():
     # Latte = load_image('order\\Latte.png')
 
     global kitchenTables, tables, chairs, trashes, machines, bloods, milkBoxes, cuptablesSmall
-    for t in kitchenTables:
-        AllObjectClass.add_objects(t, 1)
+    AllObjectClass.add_objects(kitchenTables, 1)
     AllObjectClass.add_objects(tables, 1)
     AllObjectClass.add_objects(chairs, 1)
     AllObjectClass.add_objects(trashes, 1)

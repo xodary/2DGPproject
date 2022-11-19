@@ -245,14 +245,7 @@ class Pinn:
     blood = 'order\\bubble\\blood.png'
     milk = 'order\\bubble\\milkbubble.png'
     cupBubble = 'order\\bubble\\cup.png'
-    myitems = [
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-        ]
+    myitems = [[[] for i in range(6)] for j in range(6)]
 
     def __init__(self):
         self.character = load_image(Pinn.pinnImage)
@@ -357,7 +350,8 @@ class Pinn:
             if self.bubble is not None:
                 AllObjectClass.remove_object(self.bubble)
                 self.bubble = None
-            if type(something) == objectClass.interactionTOOL or type(something) == objectClass.Store:
+            if (type(something) == objectClass.interactionTOOL and something.bubbleTest()) or \
+                    type(something) == objectClass.Store:
                 self.bubble = objectClass.Bubble(*something.makeBubble())
                 AllObjectClass.add_object(self.bubble, 2)
         self.something = something
