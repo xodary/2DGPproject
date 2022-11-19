@@ -23,14 +23,23 @@ def enter():
     Menu = marketClass.MarketUI_Background()
     AllObjectClass.add_object(Menu, 4)
     global selling, Buttons
-    cup = marketClass.OrderBox('UI\\cupSell.png', 'UI\\cupBigIcon.png', 'UI\\cupSmallIcon.png',
-                               189, 270, 750, 121, 1, 1)
-    milk = marketClass.OrderBox('UI\\milkSell.png', 'UI\\milkBigIcon.png', 'UI\\milkSmallIcon.png',
-                                189, 735, 750, 230, 1, 2)
-    machine = marketClass.OrderBox('UI\\machineSell.png', 'UI\\machineBigIcon.png', 'UI\\machineSmallIcon.png',
-                                   189, 408, 750, 300, 1, 2)
-    bin = marketClass.OrderBox('UI\\orderBin.png', 'UI\\binBigIcon.png', 'UI\\binSmallIcon.png',
-                               189, 270, 749, 147, 1, 1)
+
+    mapSet = interactionTOOL(0, 0, 10, 5, 477, 315, "map1.6\\kitchenTableBig.png")
+    icon = marketClass.Myitem('UI\\cupBigIcon.png', 'UI\\cupSmallIcon.png', 0, 0, 1, 1, mapSet)
+    cup = marketClass.OrderBox('UI\\cupSell.png', 189, 270, 750, 121, icon)
+
+    mapSet = interactionTOOL(4, 0, 2, 1, 81, 142, 'map1.6\\milkBox.png', 'bubble\\milk.png')
+    icon = marketClass.Myitem('UI\\milkBigIcon.png', 'UI\\milkSmallIcon.png', 0, 0, 1, 2, mapSet)
+    milk = marketClass.OrderBox('UI\\milkSell.png', 189, 735, 750, 230, icon)
+
+    mapSet = interactionTOOL(0, 0, 2, 1, 84, 194, 'map1.6\\machine.png', "bubble\\coffee.png")
+    icon = marketClass.Myitem('UI\\machineBigIcon.png', 'UI\\machineSmallIcon.png', 0, 0, 1, 2, mapSet)
+    machine = marketClass.OrderBox('UI\\machineSell.png', 189, 408, 750, 300, icon)
+
+    mapSet = interactionTOOL(2, 4, 1, 1, 56, 94, 'map1.6\\trash.png')
+    icon = marketClass.Myitem('UI\\binBigIcon.png', 'UI\\binSmallIcon.png', 0, 0, 1, 1, mapSet)
+    bin = marketClass.OrderBox('UI\\orderBin.png', 189, 270, 749, 147, icon)
+
     shelf = marketClass.OrderBox('UI\\orderShelf.png', 'UI\\shelfBigIcon.png', 'UI\\shelfSmallIcon.png',
                                  189, 450, 749, 211, 2, 2)
     table = marketClass.OrderBox('UI\\orderTable.png', 'UI\\tableBigIcon.png', 'UI\\tableSmallIcon.png',

@@ -6,28 +6,31 @@ import game_framework
 import marketFramework
 
 class interactionTOOL:
+    # xIndex, yIndex는 인자값으로 주지 않음.
     def __init__(self, xIndex, yIndex, wIndex, hIndex, width, height,
-                 pngName, bubbleimage=None, bubbleSize=100):
+                 pngName, bubbleimage=None, bubbleSize=100, weightList=None):
         self.image = load_image(pngName)
-        self.xIndex = xIndex + gamePlay.MainMapPlusX
-        self.yIndex = yIndex + gamePlay.MainMapPlusY
+        self.xIndex = xIndex
+        self.yIndex = yIndex
         # x와 y는 정가운데임.
         self.x = gamePlay.mapstartX + gamePlay.boxSizeW * self.xIndex + gamePlay.boxSizeW * wIndex / 2
         self.width, self.height = width, height
-        self.y = gamePlay.HEIGHT - (gamePlay.mapstartY + gamePlay.boxSizeH * self.yIndex + gamePlay.boxSizeH * hIndex - self.height / 2)
+        self.y = gamePlay.HEIGHT - (
+                    gamePlay.mapstartY + gamePlay.boxSizeH * self.yIndex + gamePlay.boxSizeH * hIndex - self.height / 2)
         self.down = self.y - self.height / 2
         self.bubbleimage = bubbleimage
         self.bubbleSize = bubbleSize
-        global mapping
-        for i in range(wIndex):
-            for j in range(hIndex):
-                gamePlay.mapping[self.yIndex + j][self.xIndex + i] = self
+        if weightList:
+            self.weightList = weightList
+        else:
+            self.weightList = [[1 for n in range(wIndex)] for i in range(hIndex)]
+
 
     def __lt__(self, otherObj):
         return self.image < otherObj.image
 
     def update(self):
-        pass
+        self.x, self.y = gamePlay.x, gamePlay.y
 
     def makeBubble(self):
         if self.bubbleimage != None:
@@ -35,7 +38,18 @@ class interactionTOOL:
 
     def draw(self):
         self.image.draw(self.x - gamePlay.cameraLEFT, self.y - gamePlay.cameraBOTTOM)
-        # self.image.draw(self.x, self.y)
+
+    def SetTest(self):
+        for i in range(self.wIndex):
+            for j in range(self.hIndex):
+                if self.weightList[i][j] == 1 and gamePlay.mapping[self.yIndex + j][self.xIndex + i] != 0:
+                    return False
+        return True
+    def success(self):
+        for i in range(self.wIndex):
+            for j in range(self.hIndex):
+                if self.weightList[i][j] == 1:
+                    gamePlay.mapping[self.yIndex + j][self.xIndex + i] = self
 
 
 class Store(interactionTOOL):

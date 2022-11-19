@@ -204,7 +204,6 @@ class INTERACTION:
         col = clamp(0, int(self.x - gamePlay.mapstartX) // gamePlay.boxSizeW + Looking[self.faceDir][1],
                     len(gamePlay.mapping[0]) - 1)
         something = gamePlay.mapping[row][col]
-        #
         if type(something) == objectClass.Store:
             something.marketUIopen()
 
