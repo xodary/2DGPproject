@@ -72,16 +72,20 @@ class MarketUI_Background:
                 marketFramework.itemImages.append(mouseOn)
             else:
                 AllObjectClass.remove_object(mouseOn)
+
     def exit(self):
         for item in self.items[self.buttonNum]:
             AllObjectClass.remove_object(item)
 
 class OrderBox:
-    def __init__(self, pngName, BigIcon, SmallIcon, left, top, width, height,
+    def __init__(self, pngName, BigIcon, SmallIcon, furnitureImage,
+                 furnitureWidth, furnitureHeight, left, top, width, height,
                  weightX, weightY, weightMapX, weightMapY, weightList=None, weightMapList=None):
         self.image = load_image(pngName)
         self.BigIcon = BigIcon
         self.SmallIcon = SmallIcon
+        self.furnitureImage = furnitureImage
+        self.furnitureWidth, self.furnitureHeight = furnitureWidth, furnitureHeight
         self.x, self.y = left + width / 2, gamePlay.HEIGHT - (top + height / 2)
         self.width, self.height = width, height
         self.weightX, self.weightY = weightX, weightY
@@ -112,7 +116,8 @@ class OrderBox:
         return False
 
     def makeBigIcon(self, x, y):
-        icon = BigIcon(self.BigIcon, self.SmallIcon, x, y,
+        icon = BigIcon(self.BigIcon, self.SmallIcon, self.furnitureImage,
+                       self.furnitureWidth, self.furnitureHeight, x, y,
                        self.weightX, self.weightY, self.weightMapX, self.weightMapY,
                        self.weightList, self.weightMapList)
         AllObjectClass.add_object(icon, 6)
@@ -126,14 +131,18 @@ class OrderBox:
 
 
 class Myitem:
-    def __init__(self, Big, Small, xindex, yindex, weightX, weightY, weightMapX, weightMapY, weightList, weightMapList):
+    def __init__(self, Big, Small, furnitureImage, furnitureWidth, furnitureHeight,
+                 xindex, yindex, weightX, weightY, weightMapX, weightMapY, weightList, weightMapList):
         self.big = Big
         self.small = Small
+        self.furnitureImage = furnitureImage
+        self.furnitureWidth, self.furnitureHeight = furnitureWidth, furnitureHeight
         self.weightX, self.weightY = weightX, weightY
         self.weightMapX, self.weightMapY = weightMapX, weightMapY
         self.xindex, self.yindex = xindex, yindex
         self.weightList = weightList
         self.weightMapList = weightMapList
+
     def update(self):
         pass
 
@@ -141,11 +150,12 @@ class Myitem:
         pass
 
     def makeBigIcon(self):
-        return BigIcon(self.big, self.small, 0, 0, self.weightX, self.weightY, self.weightMapX, self.weightMapY,
+        return BigIcon(self.big, self.small, self.furnitureImage, 0, 0, self.weightX, self.weightY, self.weightMapX,
+                       self.weightMapY,
                        self.weightList, self.weightMapList, self.xindex, self.yindex, True)
 
     def makeSmallIcon(self):
-        return SmallIcon(self.small, self.xindex, self.yindex, self.weightX, self.weightY,
+        return SmallIcon(self.small, self.furnitureImage, self.xindex, self.yindex, self.weightX, self.weightY,
                          self.weightMapX, self.weightMapY, self.weightList, self.weightMapList)
 
 
@@ -159,13 +169,16 @@ class BigIcon:
     diffW = 10
     diffH = 6
 
-    def __init__(self, pngName, smallIcon, x, y,
+    def __init__(self, pngName, smallIcon, furnitureImage,
+                 furnitureWidth, furnitureHeight, x, y,
                  weightX, weightY, weightMapX, weightMapY,
                  weightList, weightMapList,
                  xIndex=0, yIndex=0, fit=False):
         self.image = load_image(pngName)
         self.BigIcon = pngName
         self.SmallIcon = smallIcon
+        self.furnitureImage = furnitureImage
+        self.furnitureWidth, self.furnitureHeight = furnitureWidth, furnitureHeight
         self.x, self.y = x, y
         self.weightX, self.weightY = weightX, weightY
         self.weightMapX, self.weightMapY = weightMapX, weightMapY
@@ -209,11 +222,13 @@ class BigIcon:
             for x in range(self.weightX):
                 if self.weightList[y][x] == 1:
                     pinnClass.Pinn.myitems[self.yIndex + y][self.xIndex + x].append(1)
-        pinnClass.Pinn.myitems[self.yIndex][self.xIndex].append(Myitem(self.BigIcon, self.SmallIcon,
-                                                                  self.xIndex, self.yIndex,
-                                                                  self.weightX, self.weightY,
-                                                                  self.weightMapX, self.weightMapY,
-                                                                  self.weightList, self.weightMapList))
+        pinnClass.Pinn.myitems[self.yIndex][self.xIndex].append \
+            (Myitem(self.BigIcon, self.SmallIcon,
+                    self.furnitureImage,
+                    self.xIndex, self.yIndex,
+                    self.weightX, self.weightY,
+                    self.weightMapX, self.weightMapY,
+                    self.weightList, self.weightMapList))
         self.fit = True
 
     def fitOn(self):
@@ -259,8 +274,10 @@ class SmallIcon:
     diffW = 8
     diffH = 4
 
-    def __init__(self, image, leftIndex, topIndex, weightX, weightY, weightMapX, weightMapY, weightList, weightMapList):
+    def __init__(self, image, furnitureImage, leftIndex, topIndex, weightX, weightY, weightMapX, weightMapY, weightList,
+                 weightMapList):
         self.image = load_image(image)
+        self.furnitureImage = furnitureImage
         self.leftIndex, self.topIndex = leftIndex, topIndex
         self.weightX, self.weightY = weightX, weightY
         self.weightMapX, self.weightMapY = weightMapX, weightMapY
@@ -274,6 +291,7 @@ class SmallIcon:
                   (self.weightY * SmallIcon.height - SmallIcon.diffH) // 2)
         self.weightList = weightList
         self.weightMapList = weightMapList
+
     def update(self):
         pass
 
@@ -324,5 +342,6 @@ class Button:
 
     def mouseOff(self):
         self.MouseOn = False
+
     def returnButton(self):
         return self.buttonN
