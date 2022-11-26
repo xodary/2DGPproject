@@ -23,54 +23,80 @@ def enter():
     Menu = marketClass.MarketUI_Background()
     AllObjectClass.add_object(Menu, 4)
     global selling, Buttons
-    cup = marketClass.OrderBox('UI\\cupSell.png', 'UI\\cupBigIcon.png', 'UI\\cupSmallIcon.png',
-                               189, 270, 750, 121, 1, 1, 0, 0)
-    milk = marketClass.OrderBox('UI\\milkSell.png', 'UI\\milkBigIcon.png', 'UI\\milkSmallIcon.png',
-                                189, 735, 750, 230, 1, 2, 0, 0)
-    machine = marketClass.OrderBox('UI\\machineSell.png', 'UI\\machineBigIcon.png', 'UI\\machineSmallIcon.png',
-                                   189, 408, 750, 300, 1, 2, 0, 0)
-    bin = marketClass.OrderBox('UI\\orderBin.png', 'UI\\binBigIcon.png', 'UI\\binSmallIcon.png',
-                               189, 270, 749, 147, 1, 1, 0, 0)
-    shelf = marketClass.OrderBox('UI\\orderShelf.png', 'UI\\shelfBigIcon.png', 'UI\\shelfSmallIcon.png',
-                                 189, 450, 749, 211, 2, 2, 0, 0)
+
+
+
+    #  orderBoxImage: {encode},
+    # bigIconImage: {encode},
+    # smallIconImage: {encode},
+    # furnitureImage: Any,
+    # orderLeft: {__add__},
+    # orderRight: {__add__},
+    # orderWidth: {__truediv__},
+    # orderHeight: {__truediv__},
+    # weightX: Any,
+    # weightY: Any,
+    # weightMapX: Any,
+    # weightMapY: Any,
+    # furnitureWidth: Any,
+    # furnitureHeight: Any,
+    # weightList: Any = None,
+    # weightMapList: Any = None) -> None
+    # cup = marketClass.Myitem('UI\\cupSell.png', 'UI\\cupBigIcon.png', 'UI\\cupSmallIcon.png',
+    #                            189, 270, 750, 121, 1, 1)
+    milk = marketClass.Myitem('UI\\milkSell.png', 'UI\\milkBigIcon.png',
+                              'UI\\milkSmallIcon.png', 'map1.6\\milkBox.png',
+                               189, 735, 750, 230, 1, 2, 2, 1, 81, 142, bubbleImage='bubble\\milk.png')
+    machine = marketClass.Myitem('UI\\machineSell.png', 'UI\\machineBigIcon.png',
+                                 'UI\\machineSmallIcon.png', 'map1.6\\machine.png',
+                                   189, 408, 750, 300, 1, 2, 2, 1, 84, 194, bubbleImage="bubble\\coffee.png")
+    bin = marketClass.Myitem('UI\\orderBin.png', 'UI\\binBigIcon.png', 'UI\\binSmallIcon.png', 'map1.6\\trash.png',
+                               189, 270, 749, 147, 1, 1, 1, 1, 56, 94, )
+    shelf = marketClass.Myitem('UI\\orderShelf.png', 'UI\\shelfBigIcon.png',
+                               'UI\\shelfSmallIcon.png', 'map1.6\\cuptableSmall.png',
+                               189, 450, 749, 211, 2, 2, 2, 1, 99, 174, bubbleImage='bubble\\cup.png')
     tableList = [
         [1,1,0],
         [1,1,1]
     ]
-    tableMapList = [
+
+    # table 가구 이미지 변경(의자랑 합치기)
+    table = marketClass.Myitem('UI\\orderTable.png', 'UI\\tableBigIcon.png',
+                               'UI\\tableSmallIcon.png', 'map1.6\\table.png',
+                                 189, 700, 749, 197, 3, 2, 2, 2, 100, 104, tableList)
+    blood = marketClass.Myitem('UI\\orderBlood.png', 'UI\\bloodBigIcon.png', 'UI\\bloodSmallIcon.png', 'map1.6\\water.png',
+                                 189, 270, 749, 293, 1, 2, 2, 1, 73, 249, bubbleImage='bubble\\blood.png')
+    # tree = marketClass.Myitem('UI\\orderFingerTree.png', 'UI\\treeBigIcon.png', 'UI\\treeSmallIcon.png',
+    #                              189, 600, 749, 302, 3, 3,)
+    kitchenTableList = [
+        [0,0,1],
+        [1,1,1]
+    ]
+    kitchenMapList = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ]
-    table = marketClass.OrderBox('UI\\orderTable.png', 'UI\\tableBigIcon.png', 'UI\\tableSmallIcon.png',
-                                 189, 700, 749, 197, 3, 2, 0, 0, tableList, tableMapList)
-    blood = marketClass.OrderBox('UI\\orderBlood.png', 'UI\\bloodBigIcon.png', 'UI\\bloodSmallIcon.png',
-                                 189, 270, 749, 293, 1, 2, 0, 0)
-    tree = marketClass.OrderBox('UI\\orderFingerTree.png', 'UI\\treeBigIcon.png', 'UI\\treeSmallIcon.png',
-                                 189, 600, 749, 302, 3, 3, 0, 0)
-    kitchenTableList = [
-        [0,0,1],
-        [1,1,1]
-    ]
-    kitchenTable = marketClass.OrderBox('UI\\orderKitchenTable.png', 'UI\\kitchenTableBigIcon.png', 'UI\\kitchenTableSmallIcon.png',
-                                 189, 270, 749, 295, 3, 2, 0, 0, kitchenTableList)
-    cow = marketClass.OrderBox('UI\\orderCow.png', 'UI\\cowBigIcon.png', 'UI\\cowTableSmallIcon.png',
-                                 189, 270, 749, 182, 3, 2, 0, 0)
-    chicken = marketClass.OrderBox('UI\\orderChicken.png', 'UI\\chickenBigIcon.png', 'UI\\chickenTableSmallIcon.png',
-                               189, 500, 749, 137, 2, 2, 0, 0)
+    kitchenTable = marketClass.Myitem('UI\\orderKitchenTable.png', 'UI\\kitchenTableBigIcon.png',
+                                      'UI\\kitchenTableSmallIcon.png', "map1.6\\kitchenTable.png",
+                                 189, 270, 749, 295, 3, 2, 10, 5, 477, 315, kitchenTableList, kitchenMapList)
+    # cow = marketClass.Myitem('UI\\orderCow.png', 'UI\\cowBigIcon.png', 'UI\\cowTableSmallIcon.png',
+    #                              189, 270, 749, 182, 3, 2)
+    # chicken = marketClass.Myitem('UI\\orderChicken.png', 'UI\\chickenBigIcon.png', 'UI\\chickenTableSmallIcon.png',
+    #                            189, 500, 749, 137, 2, 2)
     Buttons = [marketClass.Button(0), marketClass.Button(1), marketClass.Button(2), marketClass.Button(3)]
     AllObjectClass.add_objects(Buttons, 5)
     furniture = []
-    furniture.append([cup, milk, machine])
+    furniture.append([milk, machine])
     furniture.append([bin, shelf, table])
-    furniture.append([blood, tree])
+    furniture.append([blood])
     furniture.append([kitchenTable])
     selling.append(furniture)
 
     animal = []
-    animal.append([cow, chicken])
+    # animal.append([cow, chicken])
     selling.append(animal)
     Menu.GetItems(selling[sellingPoint], Buttons)
 
@@ -78,7 +104,7 @@ def update():
     # for object in AllObjectClass.all_objects():
     #     object.update()
     if mouseOn:
-        mouseOn.x, mouseOn.y = x, y
+        mouseOn.update()
 
 def handle_events():
     global mouseOn

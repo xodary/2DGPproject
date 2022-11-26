@@ -4,111 +4,6 @@ import marketFramework
 import pinnClass
 import AllObjectClass
 
-
-class MarketUI_Background:
-    menuL, menuR, menuB, menuT = 189, 189 + 700, 1280 - (270 + 695), 1920 - 270
-    itemL, itemR, itemB, itemT = 1041, 1041 + 707, 1280 - (270 + 678), 1920 - 270
-
-    def __init__(self):
-        self.image = load_image('UI\\marketUI.png')
-        self.items = None
-        self.buttons = None
-        self.buttonNum = 0
-
-    def update(self):
-        pass
-
-    def draw(self):
-        self.image.draw(gamePlay.viewWIDTH // 2, gamePlay.viewHEIGHT // 2)
-        for a in pinnClass.Pinn.myitems:
-            for b in a:
-                for c in b:
-                    if type(c) == Myitem:
-                        c.add_event(0)
-                        c.draw()
-
-    def GetItems(self, items, buttons):
-        self.items = items
-        self.buttons = buttons
-        AllObjectClass.add_objects(self.items[self.buttonNum], 5)
-
-    def MouseButtonDown(self, x, y):
-        # push button
-        for button in self.buttons:
-            if button.mouseOn(x, y, self.buttonNum):
-                self.buttons[self.buttonNum].mouseOff()
-                for order in self.items[self.buttonNum]:
-                    AllObjectClass.remove_object(order)
-                self.buttonNum = button.returnButton()
-                AllObjectClass.add_objects(self.items[self.buttonNum], 5)
-        # push menu items
-        for item in self.items[self.buttonNum]:
-            if item.cur_state.mouseTest(item, x, y):
-                return item.cur_state.makeBigIcon(item, x, y)
-        return None
-
-    def MouseMotion(self, x, y, mouseOn):
-        for Button in self.buttons:
-            Button.mouseOn(x, y, self.buttonNum)
-        if mouseOn:
-            # item 쪽에 마우스 올리면 칸에 쏙 들어감
-            if MarketUI_Background.itemL <= x <= MarketUI_Background.itemR and \
-                    MarketUI_Background.itemB <= y <= MarketUI_Background.itemT:
-                if mouseOn.cur_state.mouseOffTest(mouseOn):
-                    mouseOn.fit = True
-                else:
-                    mouseOn.fit = False
-            else:
-                mouseOn.fit = False
-        for item in self.items[self.buttonNum]:
-            if item.cur_state.mouseTest(item, x, y):
-                item.MouseOn = True
-            else:
-                item.MouseOn = False
-
-    def MouseButtonUp(self, mouseOn):
-        if mouseOn:
-            if mouseOn.cur_state.mouseOffTest(mouseOn):
-                mouseOn.cur_state.success(mouseOn)
-                marketFramework.itemImages.append(mouseOn)
-            else:
-                AllObjectClass.remove_object(mouseOn)
-
-    def exit(self):
-        for item in self.items[self.buttonNum]:
-            AllObjectClass.remove_object(item)
-
-class Inventory:
-    image = 'UI\\itemUI.png'
-    ImageW = 176 * 4
-    ImageH = 197 * 4
-    width = 176 * 4
-    height = 197 * 4
-
-    def __init__(self):
-        self.image = load_image(Inventory.image)
-        self.ImageW = Inventory.ImageW
-        self.ImageH = Inventory.ImageH
-        self.width = Inventory.width
-        self.height = Inventory.height
-        self.x = gamePlay.viewWIDTH - self.width // 2
-        self.y = self.height // 2
-
-    def update(self):
-        pass
-
-    def draw(self):
-        self.image.clip_draw(0, 0, self.ImageW, self.ImageH, self.x, self.y, self.width, self.height)
-        for a in pinnClass.Pinn.myitems:
-            for b in a:
-                for c in b:
-                    if type(c) is Myitem:
-                        # 인덱스 (a, b)로 설정
-                        c.add_event(1)
-                        c.draw()
-
-
-
 MAKEBIGICON, MAKESMALLICON, MAKEFURNITURE = range(3)
 event_name = ['MAKEBIGICON', 'MAKESMALLICON', 'MAKEFURNITURE']
 
@@ -134,14 +29,9 @@ class ORDERBOX:
         return False
 
     def makeBigIcon(self, x, y):
-        # import copy
-        # icon = copy.deepcopy(self)
-        icon = Myitem(self.orderBoxImage, self.bigIconImage, self.smallIconImage, self.furnitureImage,
-                 self.orderLeft, self.orderTop, self.orderWidth, self.orderHeight,
-                 self.weightX, self.weightY, self.weightMapX, self.weightMapY,
-                 self.furnitureWidth, self.furnitureHeight, self.weightList, self.weightMapList, self.bubbleImage)
-        icon.add_event(MAKEBIGICON)
+        icon = self
         icon.x, icon.y = x, y
+        icon.add_event(MAKEBIGICON)
         AllObjectClass.add_object(icon, 6)
         return icon
 
@@ -312,6 +202,8 @@ class Myitem:
         self.weightMapX, self.weightMapY = weightMapX, weightMapY
         self.furnitureWidth, self.furnitureHeight = furnitureWidth, furnitureHeight
         self.fit = False
+        self.xIndex, self.yIndex = 0, 0
+
         self.MouseOn = False
         self.event_que = []
         self.cur_state = ORDERBOX
@@ -330,7 +222,7 @@ class Myitem:
             except KeyError:
                 # print(f'Error: State {self.cur_state.__name__}    Event{event_name[event]}')
                 print('ERROR', self.cur_state.__name__, ' ', event_name[event])
-            self.cur_state.enter(self)
+            self.cur_state.enter(self, event)
 
     def draw(self):
         self.cur_state.draw(self)
