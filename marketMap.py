@@ -53,7 +53,7 @@ def enter():
     AllObjectClass.add_object(Store(7, 5, 7, 3, 387, 331, 'map1.6\\shop.png', 0, 'bubble\\signal.png'), 1)
     AllObjectClass.add_object(Store(23, 6, 6, 2, 318, 339, 'map1.6\\shop2.png', 0, 'bubble\\signal.png'), 1)
     AllObjectClass.add_object(interactionTOOL(24, 13, 2, 2, 158, 232, 'map1.6\\tree.png'), 1)
-    gamePlay.pinn.inventoryTest()
+    gamePlay.pinn.InventoryTest()
 
 def update():
     for object in AllObjectClass.all_objects():

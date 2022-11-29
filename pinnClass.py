@@ -12,6 +12,7 @@ import AllObjectClass
 import gamePlay
 import marketMap
 import marketFramework
+import marketClass
 
 running = True
 Looking = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]]
@@ -42,10 +43,15 @@ class IDLE:
         if event == INVEN:
             if self.inven != None:
                 AllObjectClass.remove_object(self.inven)
+                for item in Pinn.myitemList:
+                    AllObjectClass.remove_object(item)
                 self.inven = None
             else:
                 self.inven = marketClass.Inventory()
                 AllObjectClass.add_object(self.inven, 6)
+                for item in Pinn.myitemList:
+                    item.add_event(marketClass.MAKESMALLICON)
+                    AllObjectClass.add_object(item, 6)
     def exit(self):
         pass
     def do(self):
@@ -245,7 +251,8 @@ class Pinn:
     blood = 'order\\bubble\\blood.png'
     milk = 'order\\bubble\\milkbubble.png'
     cupBubble = 'order\\bubble\\cup.png'
-    myitems = [[[] for i in range(6)] for j in range(6)]
+    myitems = [[None for i in range(6)] for j in range(6)]
+    myitemList = []
 
     def __init__(self):
         self.character = load_image(Pinn.pinnImage)
@@ -368,7 +375,7 @@ class Pinn:
                 print('ERROR', self.cur_state.__name__, ' ', event_name[event])
             self.cur_state.enter(self, event)
 
-    def inventoryTest(self):
+    def InventoryTest(self):
         if self.inven:
             AllObjectClass.add_object(self.inven, 6)
 

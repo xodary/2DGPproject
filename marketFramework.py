@@ -94,17 +94,14 @@ def enter():
     furniture.append([blood])
     furniture.append([kitchenTable])
     selling.append(furniture)
-
     animal = []
     # animal.append([cow, chicken])
     selling.append(animal)
     Menu.GetItems(selling[sellingPoint], Buttons)
 
 def update():
-    # for object in AllObjectClass.all_objects():
-    #     object.update()
-    if mouseOn:
-        mouseOn.update()
+    for object in AllObjectClass.all_objects():
+        object.update()
 
 def handle_events():
     global mouseOn
@@ -142,13 +139,13 @@ def exit():
     for menu in selling.copy():
         selling.remove(menu)
     AllObjectClass.remove_object(Menu)
-    for itemImage in itemImages.copy():
-        AllObjectClass.remove_object(itemImage)
-        itemImages.remove(itemImage)
     if mouseOn != None:
         AllObjectClass.remove_object(mouseOn)
     for Button in Buttons:
         AllObjectClass.remove_object(Button)
+    if mouseOn:
+        AllObjectClass.remove_object(mouseOn)
+
 
 def pause():
     pass

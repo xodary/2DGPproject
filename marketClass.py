@@ -14,18 +14,16 @@ class MarketUI_Background:
         self.items = None
         self.buttons = None
         self.buttonNum = 0
-
+        for item in pinnClass.Pinn.myitemList:
+            item.add_event(MAKEBIGICON)
+            item.fit = True
+            AllObjectClass.add_object(item, 6)
     def update(self):
         pass
 
     def draw(self):
         self.image.draw(gamePlay.viewWIDTH // 2, gamePlay.viewHEIGHT // 2)
-        for a in pinnClass.Pinn.myitems:
-            for b in a:
-                for c in b:
-                    if type(c) == Myitem:
-                        c.add_event(0)
-                        c.draw()
+
 
     def GetItems(self, items, buttons):
         self.items = items
@@ -74,11 +72,17 @@ class MarketUI_Background:
             else:
                 AllObjectClass.remove_object(mouseOn)
 
+
     def exit(self):
         for item in self.items[self.buttonNum]:
             AllObjectClass.remove_object(item)
 
+        for item in pinnClass.Pinn.myitemList:
+            AllObjectClass.remove_object(item)
+
+
 class Inventory:
+    itemUIleft, itemUItop = 1920 - 176 * 4, 197 * 4
     image = 'UI\\itemUI.png'
     ImageW = 176 * 4
     ImageH = 197 * 4
@@ -93,20 +97,53 @@ class Inventory:
         self.height = Inventory.height
         self.x = gamePlay.viewWIDTH - self.width // 2
         self.y = self.height // 2
+        self.tempXindex, self.tempYindex = 0, 0
 
     def update(self):
         pass
 
     def draw(self):
         self.image.clip_draw(0, 0, self.ImageW, self.ImageH, self.x, self.y, self.width, self.height)
-        for a in pinnClass.Pinn.myitems:
-            for b in a:
-                for c in b:
-                    if type(c) is Myitem:
-                        # 인덱스 (a, b)로 설정
-                        c.add_event(1)
-                        c.draw()
+    def MouseButtonDown(self, x, y):
+        click = None
+        if Inventory.itemUIleft < x < gamePlay.viewWIDTH and 0 < y < Inventory.itemUItop:
+            mx = (x - Inventory.itemUIleft - SMALLICON.left) // SMALLICON.width
+            my = (gamePlay.HEIGHT - y - Inventory.itemUItop - SMALLICON.top) // SMALLICON.height
+            click = pinnClass.Pinn.myitems[my][mx]
+            if click:
+                self.tempXindex, self.tempYindex = click.xIndex, click.yIndex
+                click.fit = False
+                pinnClass.Pinn.myitemList.remove(click)
+                for y in range(click.weightY):
+                    for x in range(click.weightX):
+                        pinnClass.Pinn.myitems[click.yIndex + y][click.xIndex + x] = None
+        return click
 
+
+    def MouseMotion(self, x, y, click):
+        if click:
+            if Inventory.itemUIleft < x < gamePlay.viewWIDTH and 0 < y < Inventory.itemUItop:
+                click.add_event(MAKESMALLICON)
+                if click.cur_state.mouseOffTest(click):
+                    click.fit = True
+                else:
+                    click.fit = False
+            else:
+                if click.cur_state.mouseOffTest(click):
+                    click.fit = True
+                else:
+                    click.fit = False
+                    click.add_event(MAKEFURNITURE)
+
+    def MouseButtonUp(self, click):
+        if click:
+            if click.cur_state.mouseOffTest(click):
+                click.cur_state.success(click)
+            else:
+                click.xIndex, click.yIndex = self.tempXindex, self.tempYindex
+                for y in range(click.weightY):
+                    for x in range(click.weightX):
+                        pinnClass.Pinn.myitems[click.yIndex + y][click.xIndex + x] = None
 
 
 MAKEBIGICON, MAKESMALLICON, MAKEFURNITURE = range(3)
@@ -164,7 +201,6 @@ class BIGICON:
 
     def enter(self):
         self.image = load_image(self.bigIconImage)
-        self.fit = False
 
     def do(self):
         self.x, self.y = marketFramework.x, marketFramework.y
@@ -193,7 +229,7 @@ class BIGICON:
             for y in range(self.weightY):
                 for x in range(self.weightX):
                     if self.weightList[y][x] == 1:
-                        if 1 in pinnClass.Pinn.myitems[self.yIndex + y][self.xIndex + x]:
+                        if pinnClass.Pinn.myitems[self.yIndex + y][self.xIndex + x]:
                             return False
         else:
             return False
@@ -204,13 +240,12 @@ class BIGICON:
         for y in range(self.weightY):
             for x in range(self.weightX):
                 if self.weightList[y][x] == 1:
-                    pinnClass.Pinn.myitems[self.yIndex + y][self.xIndex + x].append(1)
-        pinnClass.Pinn.myitems[self.yIndex][self.xIndex].append(self)
+                    pinnClass.Pinn.myitems[self.yIndex + y][self.xIndex + x] = self
+        pinnClass.Pinn.myitemList.append(self)
         self.fit = True
 
 
 class SMALLICON:
-    itemUIleft, itemUItop = 1920 - 176 * 4, 197 * 4
     left, top = 104, 160
     width, height = 84, 80
     imageW, imageH = 76, 76
@@ -221,7 +256,7 @@ class SMALLICON:
         self.image = load_image(self.smallIconImage)
 
     def do(self):
-        self.x, self.y = marketFramework.x, marketFramework.y
+        self.x, self.y = gamePlay.x, gamePlay.y
 
     def exit(self):
         pass
@@ -230,14 +265,14 @@ class SMALLICON:
         if not self.fit:
             self.image.draw(self.x, self.y)
         else:
-            self.image.draw(SMALLICON.itemUIleft + SMALLICON.left + self.xIndex * SMALLICON.width +
+            self.image.draw(Inventory.itemUIleft + SMALLICON.left + self.xIndex * SMALLICON.width +
                             (self.weightX * SMALLICON.width - SMALLICON.diffW) // 2,
-                            SMALLICON.itemUItop - (SMALLICON.top + self.yIndex * SMALLICON.height +
+                            Inventory.itemUItop - (SMALLICON.top + self.yIndex * SMALLICON.height +
                                                    (self.weightY * SMALLICON.height - SMALLICON.diffH) // 2))
 
     def mouseOffTest(self):
-        xCenter = (self.x - SMALLICON.left)
-        yCenter = (gamePlay.HEIGHT - self.y - SMALLICON.top)
+        xCenter = self.x - Inventory.itemUIleft - SMALLICON.left
+        yCenter = gamePlay.HEIGHT - self.y - SMALLICON.top - Inventory.itemUItop
         self.xIndex = int(xCenter - self.weightX / 2 * SMALLICON.imageW) // SMALLICON.imageW
         self.yIndex = int(yCenter - self.weightY / 2 * SMALLICON.imageH) // SMALLICON.imageH
         print(self.xIndex, self.yIndex)
@@ -246,7 +281,7 @@ class SMALLICON:
             for y in range(self.weightY):
                 for x in range(self.weightX):
                     if self.weightList[y][x] == 1:
-                        if 1 in pinnClass.Pinn.myitems[self.yIndex + y][self.xIndex + x]:
+                        if pinnClass.Pinn.myitems[self.yIndex + y][self.xIndex + x]:
                             return False
         else:
             return False
@@ -257,23 +292,79 @@ class SMALLICON:
         for y in range(self.weightY):
             for x in range(self.weightX):
                 if self.weightList[y][x] == 1:
-                    pinnClass.Pinn.myitems[self.yIndex + y][self.xIndex + x].append(1)
-        pinnClass.Pinn.myitems[self.yIndex][self.xIndex].append(self)
+                    pinnClass.Pinn.myitems[self.yIndex + y][self.xIndex + x] = self
+        pinnClass.Pinn.myitemList.append(self)
         self.fit = True
 
 
+
 class FURNITURE:
+
     def enter(self):
-        pass
+        self.image = load_image(self.furnitureImage)
 
     def do(self):
-        pass
+        self.x, self.y = gamePlay.x, gamePlay.y
+        # self.down = self.y - self.furnitureHeight / 2
 
     def exit(self):
         pass
 
     def draw(self):
-        pass
+        if not self.fit:
+            self.image.draw(self.x, self.y)
+        else:
+            self.image.draw(gamePlay.mapstartX + gamePlay.boxSizeW * self.xMapIndex +
+                            gamePlay.boxSizeW * self.furnitureWidth / 2,
+                            gamePlay.HEIGHT - (
+                            gamePlay.mapstartY +
+                            gamePlay.boxSizeH * self.yMapIndex +
+                            gamePlay.boxSizeH * self.weightMapY - self.furnitureHeight / 2))
+
+
+    def __lt__(self, otherObj):
+        return self.image < otherObj.image
+
+    def makeBubble(self):
+        if self.bubbleImage != None:
+            return self.x, self.y + self.height / 2 + 60, self.bubbleimage, self.bubbleSize
+            pass
+
+    def bubbleTest(self):
+        if self.bubbleImage:
+            return True
+        else:
+            return False
+
+    def mouseOffTest(self):
+        xCenter = (self.x + gamePlay.cameraLEFT)
+        yCenter = gamePlay.HEIGHT - (
+                self.y + gamePlay.cameraBOTTOM - self.furnitureHeight) + self.yMapIndex * gamePlay.boxSizeH
+        self.xMapIndex = int(xCenter - self.weightMapX * gamePlay.boxSizeW / 2) // gamePlay.boxSizeW - gamePlay.MainMapPlusX
+        self.yMapIndex = int(yCenter - self.weightMapY * gamePlay.boxSizeH / 2) // gamePlay.boxSizeH - gamePlay.MainMapPlusY
+        print(self.xMapIndex, self.yMapIndex)
+        if 0 <= self.xMapIndex and self.xMapIndex + self.weightMapX - 1 < 16 and \
+                0 <= self.yMapIndex and 0 <= self.yMapIndex + self.weightMapY - 1 < 9:
+            for y in range(self.weightMapY):
+                for x in range(self.weightMapX):
+                    if self.weightMapList[y][x] == 1:
+                        if gamePlay.mapping[self.yMapIndex + y][self.xMapIndex + x] != 0:
+                            return False
+        else:
+            return False
+        return True
+
+    def success(self):
+        # myitem success 함수 설정
+        for y in range(self.weightMapY):
+            for x in range(self.weightMapX):
+                if self.weightMapList[y][x] == 1:
+                    gamePlay.mapping[self.yMapIndex + y][self.xMapIndex + x].append(self)
+        gamePlay.furnitureList[self.yMapIndex][self.xMapIndex].append(self)
+        self.fit = True
+
+        self.down = self.MapLeft + self.yMapIndex * gamePlay.boxSizeH + self.weightMapY * gamePlay.boxSizeH / 2
+
 
 
 
@@ -316,6 +407,8 @@ class Myitem:
         self.event_que = []
         self.cur_state = ORDERBOX
         self.cur_state.enter(self)
+        self.MapLeft = gamePlay.mapstartX + gamePlay.MainMapPlusX * gamePlay.boxSizeW
+        self.MapTop = gamePlay.mapstartY + gamePlay.MainMapPlusY * gamePlay.boxSizeH
 
     def add_event(self, event):
         self.event_que.insert(0, event)
@@ -382,3 +475,4 @@ class Button:
 
     def returnButton(self):
         return self.buttonN
+

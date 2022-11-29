@@ -29,6 +29,9 @@ machines = None
 bloods = None
 milkBoxes = None
 cuptablesSmall = None
+holding = None
+x, y = 0, 0
+furnitureList = []
 
 def enter():
     global mapping, MainMapPlusX, MainMapPlusY, MAINMAP
@@ -147,7 +150,7 @@ def enter():
     AllObjectClass.add_objects(milkBoxes, 1)
     cuptablesSmall = [interactionTOOL(8, 0, 2, 1, 99, 174, 'map1.6\\cuptableSmall.png', 'bubble\\cup.png')]
     AllObjectClass.add_objects(cuptablesSmall, 1)
-    gamePlay.pinn.inventoryTest()
+    gamePlay.pinn.InventoryTest()
     # cup 36 34
     # carpet 638 278
     # signal 320 80
@@ -157,13 +160,26 @@ def enter():
 def update():
     for object in AllObjectClass.all_objects():
         object.update()
-
+    if holding:
+        holding.update()
 
 def handle_events():
     events = get_events()
+    global holding, x, y
     for event in events:
         if event.type == SDL_QUIT:
             game_framework.quit()
+        elif (event.type == SDL_MOUSEMOTION or
+              event.type == SDL_MOUSEBUTTONDOWN or
+              event.type == SDL_MOUSEBUTTONUP) and pinn.inven:
+            x, y = event.x, viewHEIGHT - event.y
+            if event.type == SDL_MOUSEBUTTONDOWN:
+                holding = pinn.inven.MouseButtonDown(x, y)
+            elif event.type == SDL_MOUSEMOTION:
+                pinn.inven.MouseMotion(x, y, holding)
+            elif event.type == SDL_MOUSEBUTTONUP:
+                pinn.inven.MouseButtonUp(holding)
+                holding = None
         else:
             pinn.handle_events(event)
 
@@ -283,7 +299,7 @@ def resume():
     AllObjectClass.add_objects(bloods, 1)
     AllObjectClass.add_objects(milkBoxes, 1)
     AllObjectClass.add_objects(cuptablesSmall, 1)
-    gamePlay.pinn.inventoryTest()
+    gamePlay.pinn.InventoryTest()
     # cup 36 34
     # carpet 638 278
     # signal 320 80
