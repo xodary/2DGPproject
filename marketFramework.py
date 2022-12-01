@@ -66,8 +66,9 @@ def enter():
                                  189, 700, 749, 197, 3, 2, 2, 2, 100, 104, tableList)
     blood = marketClass.Myitem('UI\\orderBlood.png', 'UI\\bloodBigIcon.png', 'UI\\bloodSmallIcon.png', 'map1.6\\water.png',
                                  189, 270, 749, 293, 1, 2, 2, 1, 73, 249, bubbleImage='bubble\\blood.png')
-    # tree = marketClass.Myitem('UI\\orderFingerTree.png', 'UI\\treeBigIcon.png', 'UI\\treeSmallIcon.png',
-    #                              189, 600, 749, 302, 3, 3,)
+    tree = marketClass.Myitem('UI\\orderFingerTree.png', 'UI\\treeBigIcon.png',
+                              'UI\\treeSmallIcon.png', 'map1.6\\fingerTree.png',
+                              189, 600, 749, 302, 3, 3, 2, 1, 182, 269)
     kitchenTableList = [
         [0,0,1],
         [1,1,1]
@@ -91,7 +92,7 @@ def enter():
     furniture = []
     furniture.append([milk, machine])
     furniture.append([bin, shelf, table])
-    furniture.append([blood])
+    furniture.append([blood, tree])
     furniture.append([kitchenTable])
     selling.append(furniture)
     animal = []

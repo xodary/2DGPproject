@@ -1,3 +1,5 @@
+import gamePlay
+import marketClass
 from std import *
 from pico2d import *
 from pinnClass import *
@@ -7,6 +9,64 @@ import AllObjectClass
 import game_framework
 
 mapping = None
+mainMapping = [  # 12 + 16 * 2 = 44 // 9 * 3 + 1 = 28
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+     1, 0, 0, 1, 1, 1, 0],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+     1, 0, 0, 1, 1, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 1, 1, 1, 0],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 1, 1, 1, 1],
+    [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 0, 1, 1],
+    [1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+     0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+     0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+     0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 1, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+     0, 0, 0, 0, 1, 1, 1],
+    [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+     0, 0, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+     0, 0, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+     0, 0, 1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,
+     0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 1, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 1, 1, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+     0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+     1, 2, 2, 2, 1, 1, 1],
+]
 MainMapPlusX, MainMapPlusY = None, None
 MAINMAP = None
 WIDTH, HEIGHT = None, None
@@ -32,69 +92,13 @@ cuptablesSmall = None
 holding = None
 x, y = 0, 0
 furnitureList = []
+save = [[] for n in range(7)]
+
 
 def enter():
     global mapping, MainMapPlusX, MainMapPlusY, MAINMAP
-    mapping = [  # 12 + 16 * 2 = 44 // 9 * 3 + 1 = 28
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-         1, 0, 0, 1, 1, 1, 0],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-         1, 0, 0, 1, 1, 1, 1],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 1, 1, 1, 0],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 1, 1, 1, 1],
-        [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 1, 1],
-        [1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 1],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-         0, 0, 0, 0, 1, 1, 1],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-         0, 0, 1, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-         0, 0, 1, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-         0, 0, 1, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-         1, 2, 2, 2, 1, 1, 1],
-    ]
+    mapping = mainMapping
     MainMapPlusX, MainMapPlusY = 18, 9
-
 
     global WIDTH, HEIGHT, cameraLEFT, cameraBOTTOM, viewWIDTH, viewHEIGHT, boxSizeW, boxSizeH, mapstartX, mapstartY
     MAINMAP = True
@@ -105,8 +109,6 @@ def enter():
     boxSizeH = 56
     mapstartX = 54
     mapstartY = 20
-
-
 
     global pinn, background
     background = BackGround('map1.6\\mapBig.png')
@@ -132,29 +134,64 @@ def enter():
     # Latte = load_image('order\\Latte.png')
 
     global kitchenTables, tables, chairs, trashes, machines, bloods, milkBoxes, cuptablesSmall
-    kitchenTables = [interactionTOOL(3, 0, 10, 5, 477, 315, "map1.6\\kitchenTable.png")]
-    AllObjectClass.add_objects(kitchenTables, 1)
-    tables = [TABLE(12, 1, 2, 2, 100, 104,  'map1.6\\table.png'),
-              TABLE(12, 6, 2, 2, 100, 104,  'map1.6\\table.png')]
-    AllObjectClass.add_objects(tables, 1)
-    chairs = [interactionTOOL(14, 1, 2, 1, 96, 144, 'map1.6\\chair.png'),
-              interactionTOOL(14, 6, 2, 1, 96, 144, 'map1.6\\chair.png')]
-    AllObjectClass.add_objects(chairs, 1)
-    trashes = [interactionTOOL(2, 4, 1, 1, 56, 94, 'map1.6\\trash.png')]
-    AllObjectClass.add_objects(trashes, 1)
-    machines = [interactionTOOL(0, 0, 2, 1, 84, 194, 'map1.6\\machine.png', "bubble\\coffee.png")]
-    AllObjectClass.add_objects(machines, 1)
-    bloods = [interactionTOOL(2, 0, 2, 1, 73, 249, 'map1.6\\water.png', 'bubble\\blood.png')]
-    AllObjectClass.add_objects(bloods, 1)
-    milkBoxes = [interactionTOOL(4, 0, 2, 1, 81, 142, 'map1.6\\milkBox.png', 'bubble\\milk.png')]
-    AllObjectClass.add_objects(milkBoxes, 1)
-    cuptablesSmall = [interactionTOOL(8, 0, 2, 1, 99, 174, 'map1.6\\cuptableSmall.png', 'bubble\\cup.png')]
-    AllObjectClass.add_objects(cuptablesSmall, 1)
-    gamePlay.pinn.InventoryTest()
-    # cup 36 34
-    # carpet 638 278
-    # signal 320 80
 
+    milkBoxes = marketClass.Myitem('UI\\milkSell.png', 'UI\\milkBigIcon.png',
+                                   'UI\\milkSmallIcon.png', 'map1.6\\milkBox.png',
+                                   189, 735, 750, 230, 1, 2, 2, 1, 81, 142, bubbleImage='bubble\\milk.png')
+    machines = marketClass.Myitem('UI\\machineSell.png', 'UI\\machineBigIcon.png',
+                                  'UI\\machineSmallIcon.png', 'map1.6\\machine.png',
+                                  189, 408, 750, 300, 1, 2, 2, 1, 84, 194, bubbleImage="bubble\\coffee.png")
+    trashes = marketClass.Myitem('UI\\orderBin.png', 'UI\\binBigIcon.png', 'UI\\binSmallIcon.png', 'map1.6\\trash.png',
+                                 189, 270, 749, 147, 1, 1, 1, 1, 56, 94, )
+    cuptablesSmall = marketClass.Myitem('UI\\orderShelf.png', 'UI\\shelfBigIcon.png',
+                                        'UI\\shelfSmallIcon.png', 'map1.6\\cuptableSmall.png',
+                                        189, 450, 749, 211, 2, 2, 2, 1, 99, 174, bubbleImage='bubble\\cup.png')
+    tableList = [
+        [1, 1, 0],
+        [1, 1, 1]
+    ]
+
+    # table 가구 이미지 변경(의자랑 합치기)
+    tables = marketClass.Myitem('UI\\orderTable.png', 'UI\\tableBigIcon.png',
+                                'UI\\tableSmallIcon.png', 'map1.6\\tableandchair.png',
+                                189, 700, 749, 197, 3, 2, 4, 2, 216, 147, tableList)
+    bloods = marketClass.Myitem('UI\\orderBlood.png', 'UI\\bloodBigIcon.png', 'UI\\bloodSmallIcon.png',
+                                'map1.6\\water.png',
+                                189, 270, 749, 293, 1, 2, 2, 1, 73, 249, bubbleImage='bubble\\blood.png')
+    kitchenTableList = [
+        [0, 0, 1],
+        [1, 1, 1]
+    ]
+    kitchenMapList = [
+        [0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1],
+    ]
+    kitchenTables = marketClass.Myitem('UI\\orderKitchenTable.png', 'UI\\kitchenTableBigIcon.png',
+                                       'UI\\kitchenTableSmallIcon.png', "map1.6\\kitchenTable.png",
+                                       189, 270, 749, 295, 3, 2, 8, 5, 477, 315, kitchenTableList, kitchenMapList)
+
+    Pinn.myitems = [
+        [machines, bloods, milkBoxes, cuptablesSmall, cuptablesSmall, trashes],
+        [machines, bloods, milkBoxes, cuptablesSmall, cuptablesSmall, None],
+        [tables, tables, None, None, None, kitchenTables],
+        [tables, tables, tables, kitchenTables, kitchenTables, kitchenTables],
+        [None, None, None, None, None, None],
+        [None, None, None, None, None, None]
+    ]
+    machines.yIndex, machines.xIndex, machines.fit = 0, 0, True
+    bloods.yIndex, bloods.xIndex, bloods.fit = 0, 1, True
+    milkBoxes.yIndex, milkBoxes.xIndex, milkBoxes.fit = 0, 2, True
+    cuptablesSmall.yIndex, cuptablesSmall.xIndex, cuptablesSmall.fit = 0, 3, True
+    kitchenTables.yIndex, kitchenTables.xIndex, kitchenTables.fit = 2, 3, True
+    tables.yIndex, tables.xIndex, tables.fit = 2, 0, True
+    trashes.yIndex, trashes.xIndex, trashes.fit = 0, 5, True
+
+    pinnClass.Pinn.myitemList += (milkBoxes, bloods, kitchenTables, cuptablesSmall, machines, tables, trashes)
+    AllObjectClass.add_objects(furnitureList, 1)
+    gamePlay.pinn.InventoryTest()
 
 
 def update():
@@ -162,6 +199,8 @@ def update():
         object.update()
     if holding:
         holding.update()
+
+
 
 def handle_events():
     events = get_events()
@@ -171,22 +210,19 @@ def handle_events():
             game_framework.quit()
         elif (event.type == SDL_MOUSEMOTION or
               event.type == SDL_MOUSEBUTTONDOWN or
-              event.type == SDL_MOUSEBUTTONUP) and pinn.inven:
+              event.type == SDL_MOUSEBUTTONUP):
             x, y = event.x, viewHEIGHT - event.y
             if event.type == SDL_MOUSEBUTTONDOWN:
-                holding = pinn.inven.MouseButtonDown(x, y)
+                holding = pinn.myInventory.MouseButtonDown(x, y)
             elif event.type == SDL_MOUSEMOTION:
-                pinn.inven.MouseMotion(x, y, holding)
+                pinn.myInventory.MouseMotion(x, y, holding)
             elif event.type == SDL_MOUSEBUTTONUP:
-                pinn.inven.MouseButtonUp(holding)
+                pinn.myInventory.MouseButtonUp(holding)
                 holding = None
         else:
             pinn.handle_events(event)
 
-
-
 def draw():
-
     clear_canvas()
     for object in AllObjectClass.all_objects():
         object.draw()
@@ -198,69 +234,23 @@ def exit():
     global pinn
     del pinn
 
+
 def pause():
+    global save
+    for n in range(7):
+        for objects in AllObjectClass.objects[n]:
+            save[n].append(objects)
     AllObjectClass.clear()
+    global mainMapping
+    mainMapping = mapping
+
 
 def resume():
+    global save
+    AllObjectClass.objects = save
+    save = [[] for n in range(7)]
     global mapping, MainMapPlusX, MainMapPlusY, MAINMAP
-    mapping = [  # 12 + 16 * 2 = 44 // 9 * 3 + 1 = 28
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-         1, 0, 0, 1, 1, 1, 0],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-         1, 0, 0, 1, 1, 1, 1],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 1, 1, 1, 0],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 1, 1, 1, 1],
-        [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 1, 1],
-        [1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 1],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-         0, 0, 0, 0, 1, 1, 1],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-         0, 0, 1, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-         0, 0, 1, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-         0, 0, 1, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 1, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-         1, 2, 2, 2, 1, 1, 1],
-    ]
+    mapping = mainMapping
     MainMapPlusX, MainMapPlusY = 18, 9
 
     global WIDTH, HEIGHT, cameraLEFT, cameraBOTTOM, viewWIDTH, viewHEIGHT, boxSizeW, boxSizeH, mapstartX, mapstartY
@@ -273,45 +263,9 @@ def resume():
     mapstartX = 54
     mapstartY = 20
 
-    global pinn, background
-    AllObjectClass.add_object(background, 0)
-    # pinn = Pinn()
-    AllObjectClass.add_object(pinn, 1)
-
-    # global zombies
-    # zombies = [Zombie()]
-
-    AllObjectClass.add_object(wallTop, 1)
-    AllObjectClass.add_object(wallBottom, 1)
-    AllObjectClass.add_object(fence, 1)
-    AllObjectClass.add_object(fireobj, 1)
-
-    # global bloodAmericano, Latte
-    # bloodAmericano = load_image('order\\bloodAmericano.png')
-    # Latte = load_image('order\\Latte.png')
-
-    global kitchenTables, tables, chairs, trashes, machines, bloods, milkBoxes, cuptablesSmall
-    AllObjectClass.add_objects(kitchenTables, 1)
-    AllObjectClass.add_objects(tables, 1)
-    AllObjectClass.add_objects(chairs, 1)
-    AllObjectClass.add_objects(trashes, 1)
-    AllObjectClass.add_objects(machines, 1)
-    AllObjectClass.add_objects(bloods, 1)
-    AllObjectClass.add_objects(milkBoxes, 1)
-    AllObjectClass.add_objects(cuptablesSmall, 1)
-    gamePlay.pinn.InventoryTest()
-    # cup 36 34
-    # carpet 638 278
-    # signal 320 80
-
-
-def test_self():
-    import sys
-    this_module = sys.modules['__main__']
-    pico2d.open_canvas(1920, 1280)
-    game_framework.run(this_module)
-    pico2d.close_canvas()
-
-
-if __name__ == '__main__':
-    test_self()
+def load_saved_world():
+    AllObjectClass.load()
+    global pinn
+    for o in AllObjectClass.all_objects():
+        if isinstance(o, pinnClass.Pinn):
+            pinn = o

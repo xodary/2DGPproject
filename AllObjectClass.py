@@ -1,5 +1,6 @@
 # game world module
 
+import pickle
 # layer 0: Background Object
 # layer 1: Foreground Object
 # layer 2: bubble Object
@@ -36,3 +37,16 @@ def clear():
         del o
     for layer in objects:
         layer.clear()
+
+def save():
+    game = objects
+    with open('game.sav', 'wb') as f:
+        pickle.dump(game, f)
+    pass
+
+def load():
+    global objects
+    with open('game.sav', 'rb') as f:
+        game = pickle.load(f)
+        objects = game
+    pass

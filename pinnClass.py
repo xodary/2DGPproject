@@ -1,9 +1,6 @@
 import random
 
 import game_framework
-import marketClass
-import std
-from std import *
 from pico2d import *
 import zombieClass
 import cupClass
@@ -11,7 +8,6 @@ import objectClass
 import AllObjectClass
 import gamePlay
 import marketMap
-import marketFramework
 import marketClass
 
 running = True
@@ -47,7 +43,7 @@ class IDLE:
                     AllObjectClass.remove_object(item)
                 self.inven = None
             else:
-                self.inven = marketClass.Inventory()
+                self.inven = self.myInventory
                 AllObjectClass.add_object(self.inven, 6)
                 for item in Pinn.myitemList:
                     item.add_event(marketClass.MAKESMALLICON)
@@ -94,10 +90,15 @@ class RUN:
         elif event == INVEN:
             if self.inven != None:
                 AllObjectClass.remove_object(self.inven)
+                for item in Pinn.myitemList:
+                    AllObjectClass.remove_object(item)
                 self.inven = None
             else:
-                self.inven = marketClass.Inventory()
+                self.inven = self.myInventory
                 AllObjectClass.add_object(self.inven, 6)
+                for item in Pinn.myitemList:
+                    item.add_event(marketClass.MAKESMALLICON)
+                    AllObjectClass.add_object(item, 6)
         self.frame = 0
 
         match (self.dirX, self.dirY):
@@ -269,6 +270,7 @@ class Pinn:
         self.item = None
         self.bubble = None
         self.something = None
+        self.myInventory = marketClass.Inventory()
         self.inven = None
         self.event_que = []
         self.cur_state = IDLE
@@ -357,10 +359,15 @@ class Pinn:
             if self.bubble is not None:
                 AllObjectClass.remove_object(self.bubble)
                 self.bubble = None
-            if (type(something) == objectClass.interactionTOOL and something.bubbleTest()) or \
-                    type(something) == objectClass.Store:
-                self.bubble = objectClass.Bubble(*something.makeBubble())
-                AllObjectClass.add_object(self.bubble, 2)
+            else:
+                match type(something):
+                    case marketClass.Myitem:
+                        if something.cur_state.bubbleTest(something):
+                            self.bubble = objectClass.Bubble(*something.cur_state.makeBubble(something))
+                            AllObjectClass.add_object(self.bubble, 2)
+                    case objectClass.Store:
+                            self.bubble = objectClass.Bubble(*something.makeBubble())
+                            AllObjectClass.add_object(self.bubble, 2)
         self.something = something
 
     def update(self):

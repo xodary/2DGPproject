@@ -1,3 +1,6 @@
+import marketMap
+import pinnClass
+
 import std
 from std import *
 from pico2d import *
@@ -14,11 +17,10 @@ class interactionTOOL:
         # x와 y는 정가운데임.
         self.x = gamePlay.mapstartX + gamePlay.boxSizeW * self.xIndex + gamePlay.boxSizeW * wIndex / 2
         self.width, self.height = width, height
-        self.y = gamePlay.HEIGHT - (gamePlay.mapstartY + gamePlay.boxSizeH * self.yIndex + gamePlay.boxSizeH * hIndex - self.height / 2)
+        self.y = gamePlay.HEIGHT -(gamePlay.mapstartY + gamePlay.boxSizeH * self.yIndex + gamePlay.boxSizeH * hIndex - self.height / 2)
         self.down = self.y - self.height / 2
         self.bubbleimage = bubbleimage
         self.bubbleSize = bubbleSize
-        global mapping
         for i in range(wIndex):
             for j in range(hIndex):
                 gamePlay.mapping[self.yIndex + j][self.xIndex + i] = self
@@ -48,6 +50,7 @@ class Store(interactionTOOL):
     def __init__(self, xIndex, yIndex, wIndex, hIndex, width, height, pngName, sellingPoint, bubbleimage=None, bubbleSize=100):
         super().__init__(xIndex, yIndex, wIndex, hIndex, width, height, pngName, bubbleimage, bubbleSize)
         self.sellingPoint = sellingPoint
+
     def makeBubble(self):
         if self.bubbleimage != None:
             return self.x, self.y + 60, self.bubbleimage, self.bubbleSize

@@ -3,6 +3,7 @@ import gamePlay
 import marketFramework
 import pinnClass
 import AllObjectClass
+import marketMap
 
 
 class MarketUI_Background:
@@ -18,12 +19,12 @@ class MarketUI_Background:
             item.add_event(MAKEBIGICON)
             item.fit = True
             AllObjectClass.add_object(item, 6)
+
     def update(self):
         pass
 
     def draw(self):
         self.image.draw(gamePlay.viewWIDTH // 2, gamePlay.viewHEIGHT // 2)
-
 
     def GetItems(self, items, buttons):
         self.items = items
@@ -72,7 +73,6 @@ class MarketUI_Background:
             else:
                 AllObjectClass.remove_object(mouseOn)
 
-
     def exit(self):
         for item in self.items[self.buttonNum]:
             AllObjectClass.remove_object(item)
@@ -104,46 +104,85 @@ class Inventory:
 
     def draw(self):
         self.image.clip_draw(0, 0, self.ImageW, self.ImageH, self.x, self.y, self.width, self.height)
+
     def MouseButtonDown(self, x, y):
         click = None
-        if Inventory.itemUIleft < x < gamePlay.viewWIDTH and 0 < y < Inventory.itemUItop:
+        if Inventory.itemUIleft <= x <= gamePlay.viewWIDTH and \
+                0 <= y <= Inventory.itemUItop:
             mx = (x - Inventory.itemUIleft - SMALLICON.left) // SMALLICON.width
-            my = (gamePlay.HEIGHT - y - Inventory.itemUItop - SMALLICON.top) // SMALLICON.height
+            my = (Inventory.itemUItop - SMALLICON.top - y) // SMALLICON.height
             click = pinnClass.Pinn.myitems[my][mx]
             if click:
                 self.tempXindex, self.tempYindex = click.xIndex, click.yIndex
+                self.bornSmall = True
                 click.fit = False
                 pinnClass.Pinn.myitemList.remove(click)
                 for y in range(click.weightY):
                     for x in range(click.weightX):
-                        pinnClass.Pinn.myitems[click.yIndex + y][click.xIndex + x] = None
-        return click
+                        if click.weightList[y][x] == 1:
+                            pinnClass.Pinn.myitems[click.yIndex + y][click.xIndex + x] = None
 
+        else:
+            mx = (x + gamePlay.cameraLEFT - gamePlay.mapstartX) // gamePlay.boxSizeW
+            my = (gamePlay.HEIGHT - y - gamePlay.cameraBOTTOM - gamePlay.mapstartY) // gamePlay.boxSizeH
+            holding = gamePlay.mapping[my][mx]
+            if isinstance(holding, Myitem):
+                click = holding
+                self.tempXindex, self.tempYindex = click.xMapIndex, click.yMapIndex
+                self.bornSmall = False
+                click.fit = False
+                gamePlay.furnitureList.remove(click)
+                for y in range(click.weightMapY):
+                    for x in range(click.weightMapX):
+                        if click.weightMapList[y][x] == 1:
+                            gamePlay.mapping[click.yMapIndex + y][click.xMapIndex + x] = 0
+        return click
 
     def MouseMotion(self, x, y, click):
         if click:
-            if Inventory.itemUIleft < x < gamePlay.viewWIDTH and 0 < y < Inventory.itemUItop:
+            if Inventory.itemUIleft < x < gamePlay.viewWIDTH and 0 < y < Inventory.itemUItop and gamePlay.pinn.inven:
                 click.add_event(MAKESMALLICON)
+                AllObjectClass.remove_object(click)
+                AllObjectClass.add_object(click, 6)
                 if click.cur_state.mouseOffTest(click):
                     click.fit = True
                 else:
                     click.fit = False
             else:
+                click.add_event(MAKEFURNITURE)
+                AllObjectClass.remove_object(click)
+                AllObjectClass.add_object(click, 1)
                 if click.cur_state.mouseOffTest(click):
                     click.fit = True
                 else:
                     click.fit = False
-                    click.add_event(MAKEFURNITURE)
 
     def MouseButtonUp(self, click):
         if click:
             if click.cur_state.mouseOffTest(click):
                 click.cur_state.success(click)
             else:
-                click.xIndex, click.yIndex = self.tempXindex, self.tempYindex
-                for y in range(click.weightY):
-                    for x in range(click.weightX):
-                        pinnClass.Pinn.myitems[click.yIndex + y][click.xIndex + x] = None
+                click.fit = True
+                if self.bornSmall:
+                    click.add_event(MAKESMALLICON)
+                    AllObjectClass.remove_object(click)
+                    AllObjectClass.add_object(click, 6)
+                    pinnClass.Pinn.myitemList.append(click)
+                    click.xIndex, click.yIndex = self.tempXindex, self.tempYindex
+                    for y in range(click.weightY):
+                        for x in range(click.weightX):
+                            if click.weightList[y][x] == 1:
+                                pinnClass.Pinn.myitems[click.yIndex + y][click.xIndex + x] = click
+                else:
+                    click.add_event(MAKEFURNITURE)
+                    AllObjectClass.remove_object(click)
+                    AllObjectClass.add_object(click, 1)
+                    gamePlay.furnitureList.append(click)
+                    click.xMapIndex, click.yMapIndex = self.tempXindex, self.tempYindex
+                    for y in range(click.weightMapY):
+                        for x in range(click.weightMapX):
+                            if click.weightMapList[y][x] == 1:
+                                gamePlay.mapping[click.yMapIndex + y][click.xMapIndex + x] = click
 
 
 MAKEBIGICON, MAKESMALLICON, MAKEFURNITURE = range(3)
@@ -174,9 +213,9 @@ class ORDERBOX:
         # import copy
         # icon = copy.deepcopy(self)
         icon = Myitem(self.orderBoxImage, self.bigIconImage, self.smallIconImage, self.furnitureImage,
-                 self.orderLeft, self.orderTop, self.orderWidth, self.orderHeight,
-                 self.weightX, self.weightY, self.weightMapX, self.weightMapY,
-                 self.furnitureWidth, self.furnitureHeight, self.weightList, self.weightMapList, self.bubbleImage)
+                      self.orderLeft, self.orderTop, self.orderWidth, self.orderHeight,
+                      self.weightX, self.weightY, self.weightMapX, self.weightMapY,
+                      self.furnitureWidth, self.furnitureHeight, self.weightList, self.weightMapList, self.bubbleImage)
         icon.add_event(MAKEBIGICON)
         icon.x, icon.y = x, y
         AllObjectClass.add_object(icon, 6)
@@ -256,7 +295,10 @@ class SMALLICON:
         self.image = load_image(self.smallIconImage)
 
     def do(self):
-        self.x, self.y = gamePlay.x, gamePlay.y
+        if gamePlay.MAINMAP:
+            self.x, self.y = gamePlay.x, gamePlay.y
+        else:
+            self.x, self.y = marketMap.x, marketMap.y
 
     def exit(self):
         pass
@@ -272,7 +314,7 @@ class SMALLICON:
 
     def mouseOffTest(self):
         xCenter = self.x - Inventory.itemUIleft - SMALLICON.left
-        yCenter = gamePlay.HEIGHT - self.y - SMALLICON.top - Inventory.itemUItop
+        yCenter = Inventory.itemUItop - SMALLICON.top - self.y
         self.xIndex = int(xCenter - self.weightX / 2 * SMALLICON.imageW) // SMALLICON.imageW
         self.yIndex = int(yCenter - self.weightY / 2 * SMALLICON.imageH) // SMALLICON.imageH
         print(self.xIndex, self.yIndex)
@@ -297,15 +339,21 @@ class SMALLICON:
         self.fit = True
 
 
-
 class FURNITURE:
 
     def enter(self):
         self.image = load_image(self.furnitureImage)
 
     def do(self):
-        self.x, self.y = gamePlay.x, gamePlay.y
-        # self.down = self.y - self.furnitureHeight / 2
+        if gamePlay.MAINMAP:
+            self.x, self.y = gamePlay.x, gamePlay.y
+        else:
+            self.x, self.y = marketMap.x, marketMap.y
+        if not self.fit:
+            self.down = self.y - self.furnitureHeight / 2
+        else:
+            self.down = gamePlay.HEIGHT - (gamePlay.mapstartY + self.yMapIndex * gamePlay.boxSizeH +
+                                           self.weightMapY * gamePlay.boxSizeH)
 
     def exit(self):
         pass
@@ -315,20 +363,24 @@ class FURNITURE:
             self.image.draw(self.x, self.y)
         else:
             self.image.draw(gamePlay.mapstartX + gamePlay.boxSizeW * self.xMapIndex +
-                            gamePlay.boxSizeW * self.furnitureWidth / 2,
+                            self.weightMapX * gamePlay.boxSizeW / 2 - gamePlay.cameraLEFT,
                             gamePlay.HEIGHT - (
-                            gamePlay.mapstartY +
-                            gamePlay.boxSizeH * self.yMapIndex +
-                            gamePlay.boxSizeH * self.weightMapY - self.furnitureHeight / 2))
-
+                                    gamePlay.mapstartY +
+                                    gamePlay.boxSizeH * self.yMapIndex + gamePlay.boxSizeH * self.weightMapY -
+                                    self.furnitureHeight / 2) - gamePlay.cameraBOTTOM)
 
     def __lt__(self, otherObj):
         return self.image < otherObj.image
 
     def makeBubble(self):
         if self.bubbleImage != None:
-            return self.x, self.y + self.height / 2 + 60, self.bubbleimage, self.bubbleSize
-            pass
+            return (gamePlay.mapstartX + gamePlay.boxSizeW * self.xMapIndex +
+                    self.weightMapX * gamePlay.boxSizeW / 2,
+                    gamePlay.HEIGHT - (
+                            gamePlay.mapstartY +
+                            gamePlay.boxSizeH * self.yMapIndex + gamePlay.boxSizeH * self.weightMapY -
+                            self.furnitureHeight / 2) + 150,
+                    self.bubbleImage, self.bubbleSize)
 
     def bubbleTest(self):
         if self.bubbleImage:
@@ -337,14 +389,16 @@ class FURNITURE:
             return False
 
     def mouseOffTest(self):
-        xCenter = (self.x + gamePlay.cameraLEFT)
-        yCenter = gamePlay.HEIGHT - (
-                self.y + gamePlay.cameraBOTTOM - self.furnitureHeight) + self.yMapIndex * gamePlay.boxSizeH
-        self.xMapIndex = int(xCenter - self.weightMapX * gamePlay.boxSizeW / 2) // gamePlay.boxSizeW - gamePlay.MainMapPlusX
-        self.yMapIndex = int(yCenter - self.weightMapY * gamePlay.boxSizeH / 2) // gamePlay.boxSizeH - gamePlay.MainMapPlusY
+        xCenter = self.x + gamePlay.cameraLEFT - gamePlay.mapstartX
+        yCenter = gamePlay.HEIGHT - (self.y + gamePlay.cameraBOTTOM) - gamePlay.mapstartY
+        self.xMapIndex = int(xCenter - self.weightMapX * gamePlay.boxSizeW / 2) // gamePlay.boxSizeW
+        self.yMapIndex = int(
+            yCenter + self.furnitureHeight / 2 - self.weightMapY * gamePlay.boxSizeH / 2) // gamePlay.boxSizeH
         print(self.xMapIndex, self.yMapIndex)
-        if 0 <= self.xMapIndex and self.xMapIndex + self.weightMapX - 1 < 16 and \
-                0 <= self.yMapIndex and 0 <= self.yMapIndex + self.weightMapY - 1 < 9:
+        if 0 <= self.xMapIndex - gamePlay.MainMapPlusX and \
+                self.xMapIndex - gamePlay.MainMapPlusX + self.weightMapX - 1 < 16 and \
+                0 <= self.yMapIndex - gamePlay.MainMapPlusY and \
+                0 <= self.yMapIndex - gamePlay.MainMapPlusY + self.weightMapY - 1 < 9 and gamePlay.MAINMAP:
             for y in range(self.weightMapY):
                 for x in range(self.weightMapX):
                     if self.weightMapList[y][x] == 1:
@@ -359,13 +413,11 @@ class FURNITURE:
         for y in range(self.weightMapY):
             for x in range(self.weightMapX):
                 if self.weightMapList[y][x] == 1:
-                    gamePlay.mapping[self.yMapIndex + y][self.xMapIndex + x].append(self)
-        gamePlay.furnitureList[self.yMapIndex][self.xMapIndex].append(self)
+                    gamePlay.mapping[self.yMapIndex + y][self.xMapIndex + x] = self
+        gamePlay.furnitureList.append(self)
         self.fit = True
-
-        self.down = self.MapLeft + self.yMapIndex * gamePlay.boxSizeH + self.weightMapY * gamePlay.boxSizeH / 2
-
-
+        self.down = gamePlay.mapstartX + gamePlay.MainMapPlusX * gamePlay.boxSizeW + \
+                    self.yMapIndex * gamePlay.boxSizeH + self.weightMapY * gamePlay.boxSizeH / 2
 
 
 next_state = {
@@ -407,8 +459,20 @@ class Myitem:
         self.event_que = []
         self.cur_state = ORDERBOX
         self.cur_state.enter(self)
-        self.MapLeft = gamePlay.mapstartX + gamePlay.MainMapPlusX * gamePlay.boxSizeW
-        self.MapTop = gamePlay.mapstartY + gamePlay.MainMapPlusY * gamePlay.boxSizeH
+        self.down = 0
+
+    def __getstate__(self):
+        state = {'xIndex': self.xIndex, 'yIndex': self.yIndex,
+                 'xMapIndex': self.xMapIndex, 'yMapIndex': self.yMapIndex,
+                 'fit': self.fit, 'cur_state': self.cur_state}
+        return state
+
+    # 복구할 때
+    def __setstate__(self, state):
+        self.__init__()  # 강제로 생성자를 호출해서, 일단은 전체
+        # 속성을 다 확보한다
+        # 업데이트를 통해서, 속성값을 복구한 값으로 변경한다.
+        self.__dict__.update(state)
 
     def add_event(self, event):
         self.event_que.insert(0, event)
@@ -475,4 +539,3 @@ class Button:
 
     def returnButton(self):
         return self.buttonN
-
