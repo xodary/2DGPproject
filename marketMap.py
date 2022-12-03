@@ -100,6 +100,7 @@ def exit():
     AllObjectClass.clear()
     global marketMapping
     marketMapping = gamePlay.mapping
+    gamePlay.cameraBOTTOM = 0
 
 def pause():
     pass

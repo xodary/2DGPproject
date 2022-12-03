@@ -1,5 +1,6 @@
 import random
 
+import animalRoomFramework
 import game_framework
 from pico2d import *
 import zombieClass
@@ -31,23 +32,12 @@ key_event_table = {
 }
 
 
-
 class IDLE:
     def enter(self, event):
         print('Enter IDLE')
         self.line = 0
         if event == INVEN:
-            if self.inven != None:
-                AllObjectClass.remove_object(self.inven)
-                for item in Pinn.myitemList:
-                    AllObjectClass.remove_object(item)
-                self.inven = None
-            else:
-                self.inven = self.myInventory
-                AllObjectClass.add_object(self.inven, 6)
-                for item in Pinn.myitemList:
-                    item.add_event(marketClass.MAKESMALLICON)
-                    AllObjectClass.add_object(item, 6)
+            self.ComeonInven()
     def exit(self):
         pass
     def do(self):
@@ -88,17 +78,7 @@ class RUN:
             self.dirY += 1
             print('Enter SU')
         elif event == INVEN:
-            if self.inven != None:
-                AllObjectClass.remove_object(self.inven)
-                for item in Pinn.myitemList:
-                    AllObjectClass.remove_object(item)
-                self.inven = None
-            else:
-                self.inven = self.myInventory
-                AllObjectClass.add_object(self.inven, 6)
-                for item in Pinn.myitemList:
-                    item.add_event(marketClass.MAKESMALLICON)
-                    AllObjectClass.add_object(item, 6)
+            self.ComeonInven()
         self.frame = 0
 
         match (self.dirX, self.dirY):
@@ -144,14 +124,22 @@ class RUN:
         else:
             self.x += self.dirX * RUN_SPEED_PPS * game_framework.frame_time * float(random.randint(8, 11) / 10)
             self.y += self.dirY * RUN_SPEED_PPS * game_framework.frame_time * float(random.randint(8, 11) / 10)
-        self.x = clamp(50, self.x, gamePlay.WIDTH - 50)
-        self.y = clamp(20, self.y, gamePlay.HEIGHT - 20)
-        rawTop = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY + 10) // gamePlay.boxSizeH,
-                       len(gamePlay.mapping) - 1)
-        rawBottom = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY - 10) // gamePlay.boxSizeH,
-                          len(gamePlay.mapping) - 1)
-        colLeft = clamp(0, int(self.x - gamePlay.mapstartX - 20) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
-        colRight = clamp(0, int(self.x - gamePlay.mapstartX + 20) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
+        if gamePlay.animalRoom:
+            self.x = clamp(animalRoomFramework.left, self.x, animalRoomFramework.right)
+            self.y = clamp(animalRoomFramework.bottom, self.y, animalRoomFramework.top)
+            rawTop = clamp(0, int(animalRoomFramework.top - self.y + 10) // gamePlay.boxSizeH, 6)
+            rawBottom = clamp(0, int(animalRoomFramework.top - self.y - 10) // gamePlay.boxSizeH, 6)
+            colLeft = clamp(0, int(self.x - animalRoomFramework.left - 10) // gamePlay.boxSizeW, 15)
+            colRight = clamp(0, int(self.x - animalRoomFramework.left + 10) // gamePlay.boxSizeW, 15)
+        else:
+            self.x = clamp(50, self.x, gamePlay.WIDTH - 50)
+            self.y = clamp(20, self.y, gamePlay.HEIGHT - 20)
+            rawTop = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY + 10) // gamePlay.boxSizeH,
+                           len(gamePlay.mapping) - 1)
+            rawBottom = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY - 10) // gamePlay.boxSizeH,
+                              len(gamePlay.mapping) - 1)
+            colLeft = clamp(0, int(self.x - gamePlay.mapstartX - 20) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
+            colRight = clamp(0, int(self.x - gamePlay.mapstartX + 20) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
         if gamePlay.mapping[rawTop][colLeft] != 0 or gamePlay.mapping[rawTop][colRight] != 0 or \
                 gamePlay.mapping[rawBottom][colLeft] != 0 or gamePlay.mapping[rawBottom][colRight] != 0:
             self.x = self.oldX
@@ -189,6 +177,11 @@ class RUN:
         elif not gamePlay.MAINMAP and gamePlay.mapping[row][col] == 2:
             game_framework.pop_state()
             self.x, self.y = 2236, gamePlay.HEIGHT - 1516
+        if gamePlay.MAINMAP and gamePlay.mapping[row][col] == 3:
+            game_framework.push_state(animalRoomFramework)
+        elif not gamePlay.MAINMAP and gamePlay.animalRoom and gamePlay.mapping[rawBottom][colRight] == 3:
+            game_framework.pop_state()
+            self.x, self.y = 1300, 1200
 
     def draw(self):
         self.character.clip_draw(int(self.frame) * Pinn.pinnImageX,
@@ -202,6 +195,8 @@ class INTERACTION:
     def enter(self, event):
         print('Enter INTERACTION')
         self.line = 0
+        if event == INVEN:
+            self.ComeonInven()
         if not gamePlay.MAINMAP:
             self.dirX = 0
             self.dirY = 0
@@ -281,7 +276,7 @@ next_state = {
     IDLE:  {RU: RUN,  LU: RUN,  RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN, SPACE: INTERACTION, STOP: IDLE},
     RUN:   {RU: RUN, LU: RUN, RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN, SPACE: INTERACTION, STOP: IDLE},
     INTERACTION: {RU: RUN, LU: RUN, RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN,
-                  SPACE: INTERACTION, STOP: IDLE, ESC: IDLE},
+                  SPACE: RUN, STOP: IDLE, ESC: IDLE},
 }
 
 PIXEL_PER_METER = 10.0 / 0.1
@@ -442,3 +437,16 @@ class Pinn:
         if self.inven != None:
             AllObjectClass.remove_object(self.inven)
             self.inven = None
+
+    def ComeonInven(self):
+        if self.inven != None:
+            AllObjectClass.remove_object(self.inven)
+            for item in Pinn.myitemList:
+                AllObjectClass.remove_object(item)
+            self.inven = None
+        else:
+            self.inven = self.myInventory
+            AllObjectClass.add_object(self.inven, 6)
+            for item in Pinn.myitemList:
+                item.add_event(marketClass.MAKESMALLICON)
+                AllObjectClass.add_object(item, 6)

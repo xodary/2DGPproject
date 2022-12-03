@@ -46,7 +46,7 @@ class Zombie:
         self.bubbleFrame = 0
         self.chairX, self.chairY = 0, 0
         self.frame, self.line = 0, 0
-        self.xPos, self.yPos = gamePlay.entranceX, gamePlay.entranceY - 300
+        self.xPos, self.yPos = random.randrange(gamePlay.WIDTH), random.randrange(gamePlay.entranceY)
         self.xDir, self.yDir = 0, 0
         self.timer = 1.0
         self.wait_timer = 2.0
@@ -69,8 +69,9 @@ class Zombie:
                                 FRAMES_PER_ACTION_BUBBLE * ACTION_PER_TIME_BUBBLE * game_framework.frame_time) % 4
         if self.BirthingBool:
             self.birthCount = int((1 - self.birthingTime / 3) * 12)
-            self.line = self.birthCount // 3
+            self.line = self.birthCount // 4
             self.frame = self.birthCount % 4
+            print(self.birthCount, self.line, self.frame)
         else:
             self.xPos = clamp(0, self.xPos + self.speed * self.dirX * game_framework.frame_time, gamePlay.WIDTH)
             self.yPos = clamp(0, self.yPos + self.speed * self.dirY * game_framework.frame_time, gamePlay.HEIGHT)
@@ -150,8 +151,8 @@ class Zombie:
 
     def FindEntrance(self):
         distance = (gamePlay.entranceX - self.xPos) ** 2 + (gamePlay.entranceY - self.yPos) ** 2
-        if not gamePlay.entranceX - 170 < self.xPos < gamePlay.entranceX + 170:
-            if gamePlay.entranceX - 170 < self.xPos:
+        if not gamePlay.entranceX - 50 < self.xPos < gamePlay.entranceX + 50:
+            if gamePlay.entranceX - 50 < self.xPos:
                 self.dirX, self.dirY = -1, 0
             elif self.xPos < gamePlay.entranceX + 170:
                 self.dirX, self.dirY = 1, 0

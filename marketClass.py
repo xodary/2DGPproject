@@ -5,7 +5,8 @@ import marketFramework
 import pinnClass
 import AllObjectClass
 import marketMap
-
+import animalRoomFramework
+import BehaviorTree
 
 class MarketUI_Background:
     menuL, menuR, menuB, menuT = 189, 189 + 700, 1280 - (270 + 695), 1280 - 270
@@ -103,6 +104,7 @@ class MarketUI_Background:
 
 class Inventory:
     itemUIleft, itemUItop = 1920 - 176 * 4, 197 * 4
+    # itemUIright, itemUIbottom = 1920 - 176 * 4, 197 * 4
     image = 'UI\\itemUI.png'
     ImageW = 176 * 4
     ImageH = 197 * 4
@@ -172,7 +174,7 @@ class Inventory:
                 click.add_event(MAKEFURNITURE)
                 AllObjectClass.remove_object(click)
                 AllObjectClass.add_object(click, 1)
-                if click.cur_state.mouseOffTest(click):
+                if click.cur_state.mouseOffTest(click) and not gamePlay.animalRoom:
                     click.fit = True
                 else:
                     click.fit = False
@@ -230,12 +232,7 @@ class ORDERBOX:
         return False
 
     def makeBigIcon(self, x, y):
-        # import copy
-        # icon = copy.deepcopy(self)
-        icon = Myitem(self.orderBoxImage, self.bigIconImage, self.smallIconImage, self.furnitureImage,
-                      self.orderLeft, self.orderTop, self.orderWidth, self.orderHeight,
-                      self.weightX, self.weightY, self.weightMapX, self.weightMapY,
-                      self.furnitureWidth, self.furnitureHeight, self.weightList, self.weightMapList, self.bubbleImage)
+        icon = self.deepcopy()
         icon.add_event(MAKEBIGICON)
         icon.x, icon.y = x, y
         AllObjectClass.add_object(icon, 6)
@@ -317,6 +314,8 @@ class SMALLICON:
     def do(self):
         if gamePlay.MAINMAP:
             self.x, self.y = gamePlay.x, gamePlay.y
+        elif gamePlay.animalRoom:
+            self.x, self.y = animalRoomFramework.x, animalRoomFramework.y
         else:
             self.x, self.y = marketMap.x, marketMap.y
 
@@ -333,6 +332,7 @@ class SMALLICON:
                                                    (self.weightY * SMALLICON.height - SMALLICON.diffH) // 2))
 
     def mouseOffTest(self):
+
         xCenter = self.x - Inventory.itemUIleft - SMALLICON.left
         yCenter = Inventory.itemUItop - SMALLICON.top - self.y
         self.xIndex = int(xCenter - self.weightX / 2 * SMALLICON.imageW) // SMALLICON.imageW
@@ -367,6 +367,8 @@ class FURNITURE:
     def do(self):
         if gamePlay.MAINMAP:
             self.x, self.y = gamePlay.x, gamePlay.y
+        elif gamePlay.animalRoom:
+            self.x, self.y = animalRoomFramework.x, animalRoomFramework.y
         else:
             self.x, self.y = marketMap.x, marketMap.y
         if not self.fit:
@@ -441,6 +443,116 @@ class FURNITURE:
                     self.yMapIndex * gamePlay.boxSizeH + self.weightMapY * gamePlay.boxSizeH / 2
 
 
+class ANIMAL:
+    PIXEL_PER_METER = 10.0 / 0.1
+    RUN_SPEED_KMPH = 5.0
+    RUN_SPEED_MPM = RUN_SPEED_KMPH * 1000.0 / 60.6
+    RUN_SPEED_MPS = RUN_SPEED_MPM / 60.0
+    RUN_SPEED_PPS = RUN_SPEED_MPS * PIXEL_PER_METER
+
+    TIME_PER_ACTION = 3
+    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+    FRAMES_PER_ACTION = 4
+
+    def enter(self):
+        self.image = load_image(self.furnitureImage)
+        self.wander = False
+    def __lt__(self, otherObj):
+        return self.image < otherObj.image
+
+    def do(self):
+        if self.wander:
+            self.cur_state.Wander(self)
+        else:
+            self.cur_state.Wait(self)
+        if not self.install:
+            if gamePlay.animalRoom:
+                self.xPos = animalRoomFramework.x
+                self.yPos = animalRoomFramework.y
+            elif gamePlay.MAINMAP:
+                self.xPos = gamePlay.x
+                self.yPos = gamePlay.y
+            else:
+                self.xPos = marketMap.x
+                self.yPos = marketMap.y
+        else:
+            self.frame = (self.frame +
+                          ANIMAL.FRAMES_PER_ACTION * ANIMAL.ACTION_PER_TIME * game_framework.frame_time) % 4
+            if self.speed != 0:
+                self.xPos = clamp(animalRoomFramework.left + 50,
+                                  self.xPos + self.speed * self.dirX * game_framework.frame_time,
+                                  animalRoomFramework.right - 150)
+                self.yPos = clamp(animalRoomFramework.bottom + 50,
+                                  self.yPos + self.speed * self.dirY * game_framework.frame_time,
+                                  animalRoomFramework.top)
+        self.down = self.yPos - self.furnitureHeight / 2
+
+    def exit(self):
+        pass
+
+    def draw(self):
+
+        if self.furnitureImage == 'character1.6\\cow.png':
+            if self.line < 0:
+                self.image.clip_composite_draw(int(self.frame) * 256,
+                                     1280 - (int(1) + 1) * 256,
+                                     256, 256, 0, 'h',
+                                     self.xPos, self.yPos, 256, 256)
+            else:
+                self.image.clip_draw(int(self.frame) * 256,
+                                 1280 - (int(self.line) + 1) * 256,
+                                 256, 256,
+                                 self.xPos, self.yPos)
+        else:
+            self.image.clip_draw(int(self.frame) * 128,
+                                 896 - (int(self.line) + 1) * 128,
+                                 128, 128,
+                                 self.xPos, self.yPos)
+
+    def mouseOffTest(self):
+        if (gamePlay.animalRoom and animalRoomFramework.left < self.xPos < animalRoomFramework.right and
+                animalRoomFramework.bottom < self.yPos < animalRoomFramework.top):
+            return True
+        else:
+            return False
+
+    def success(self):
+        animalRoomFramework.animalList.append(self)
+        self.install = True
+
+    def Wander(self):
+        self.speed = ANIMAL.RUN_SPEED_PPS
+        self.timer -= game_framework.frame_time
+        if self.timer <= 0:
+            self.timer = 5
+            print('wander success')
+            self.wander = False
+
+        # else:
+        #     return BehaviorTree.RUNNING
+
+    def Wait(self):
+        self.speed = 0
+        if self.furnitureImage == 'character1.6\\cow.png':
+            self.line = 4
+        else:
+            self.line = 6
+        self.wait_timer -= game_framework.frame_time
+        if self.wait_timer <= 0:
+            self.wait_timer = 5
+            import random
+            if self.furnitureImage == 'character1.6\\cow.png':
+                whereToGo = random.choice([(1, 0, 1), (-1, 0, -1), (0, -1, 0), (0, 1, 2)])
+            else:
+                whereToGo = random.choice([(1, 0, 1), (-1, 0, 3), (0, -1, 0), (0, 1, 2)])
+            self.dirX = whereToGo[0]
+            self.dirY = whereToGo[1]
+            self.line = whereToGo[2]
+            print('wait success')
+            self.wander = True
+
+
+
 next_state = {
     ORDERBOX: {MAKEBIGICON: BIGICON, MAKESMALLICON: SMALLICON, MAKEFURNITURE: FURNITURE},
     BIGICON: {MAKESMALLICON: SMALLICON, MAKEFURNITURE: FURNITURE},
@@ -448,12 +560,20 @@ next_state = {
     FURNITURE: {MAKEBIGICON: BIGICON, MAKESMALLICON: SMALLICON}
 }
 
+next_state_animal = {
+    ORDERBOX: {MAKEBIGICON: BIGICON, MAKESMALLICON: SMALLICON, MAKEFURNITURE: ANIMAL},
+    BIGICON: {MAKESMALLICON: SMALLICON, MAKEFURNITURE: ANIMAL},
+    SMALLICON: {MAKEBIGICON: BIGICON, MAKEFURNITURE: ANIMAL},
+    ANIMAL: {MAKEBIGICON: BIGICON, MAKESMALLICON: SMALLICON}
+}
+
 
 class Myitem:
     def __init__(self, orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
                  orderLeft, orderTop, orderWidth, orderHeight,
                  weightX, weightY, weightMapX, weightMapY,
-                 furnitureWidth, furnitureHeight, weightList=None, weightMapList=None, bubbleImage=None):
+                 furnitureWidth, furnitureHeight, price, bgm=None, weightList=None, weightMapList=None,
+                 bubbleImage=None):
 
         # weightList 특별 처리
         if weightList:
@@ -481,25 +601,38 @@ class Myitem:
         self.cur_state = ORDERBOX
         self.cur_state.enter(self)
         self.down = 0
+        self.bgm = bgm
+        self.price = price
+        self.frame, self.line = 0, 0
+        self.xPos, self.yPos = 0, 0
+        self.dirX, self.dirY = 0, 0
         self.woodyHit = load_wav('sound\\woodyHit.wav')
 
-    def __getstate__(self):
-        state = {'xIndex': self.xIndex, 'yIndex': self.yIndex,
-                 'xMapIndex': self.xMapIndex, 'yMapIndex': self.yMapIndex,
-                 'fit': self.fit, 'cur_state': self.cur_state}
-        return state
+    # def __getstate__(self):
+    #     state = {'xIndex': self.xIndex, 'yIndex': self.yIndex,
+    #              'xMapIndex': self.xMapIndex, 'yMapIndex': self.yMapIndex,
+    #              'fit': self.fit, 'cur_state': self.cur_state}
+    #     return state
 
     # 복구할 때
-    def __setstate__(self, state):
-        self.__init__()  # 강제로 생성자를 호출해서, 일단은 전체
-        # 속성을 다 확보한다
-        # 업데이트를 통해서, 속성값을 복구한 값으로 변경한다.
-        self.__dict__.update(state)
+    # def __setstate__(self, state):
+    #     self.__init__()  # 강제로 생성자를 호출해서, 일단은 전체
+    #     # 속성을 다 확보한다
+    #     # 업데이트를 통해서, 속성값을 복구한 값으로 변경한다.
+    #     self.__dict__.update(state)
+
+    def deepcopy(self):
+        return Myitem(self.orderBoxImage, self.bigIconImage, self.smallIconImage, self.furnitureImage,
+                      self.orderLeft, self.orderTop, self.orderWidth, self.orderHeight,
+                      self.weightX, self.weightY, self.weightMapX, self.weightMapY,
+                      self.furnitureWidth, self.furnitureHeight, self.price, self.bgm,
+                      self.weightList, self.weightMapList, self.bubbleImage)
 
     def add_event(self, event):
         self.event_que.insert(0, event)
 
     def update(self):
+
         self.cur_state.do(self)
         if self.event_que:
             event = self.event_que.pop()
@@ -519,34 +652,49 @@ class Table(Myitem):
     def __init__(self, orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
                  orderLeft, orderTop, orderWidth, orderHeight,
                  weightX, weightY, weightMapX, weightMapY,
-                 furnitureWidth, furnitureHeight, weightList=None, weightMapList=None, bubbleImage=None):
+                 furnitureWidth, furnitureHeight, price,
+                 bgm=None, weightList=None, weightMapList=None, bubbleImage=None):
         super().__init__(orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
                          orderLeft, orderTop, orderWidth, orderHeight,
                          weightX, weightY, weightMapX, weightMapY,
-                         furnitureWidth, furnitureHeight, weightList, weightMapList, bubbleImage)
+                         furnitureWidth, furnitureHeight, price, bgm, weightList, weightMapList, bubbleImage)
         self.sit = False
         self.sittingZombie = None
+
+    def deepcopy(self):
+        return Table(self.orderBoxImage, self.bigIconImage, self.smallIconImage, self.furnitureImage,
+                     self.orderLeft, self.orderTop, self.orderWidth, self.orderHeight,
+                     self.weightX, self.weightY, self.weightMapX, self.weightMapY,
+                     self.furnitureWidth, self.furnitureHeight, self.price, self.bgm,
+                     self.weightList, self.weightMapList, self.bubbleImage)
 
 
 class waitingForSecond(Myitem):
     def __init__(self, orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
                  orderLeft, orderTop, orderWidth, orderHeight,
                  weightX, weightY, weightMapX, weightMapY,
-                 furnitureWidth, furnitureHeight, bgm=None, weightList=None, weightMapList=None, bubbleImage=None):
+                 furnitureWidth, furnitureHeight, price, bgm=None, weightList=None, weightMapList=None,
+                 bubbleImage=None):
         super().__init__(orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
                          orderLeft, orderTop, orderWidth, orderHeight,
                          weightX, weightY, weightMapX, weightMapY,
-                         furnitureWidth, furnitureHeight, weightList, weightMapList, bubbleImage)
-
+                         furnitureWidth, furnitureHeight, price, bgm, weightList, weightMapList, bubbleImage)
         self.waitingTime = 3
-        self.bubbleload = load_image(self.bubbleImage)
         self.ready = False
         self.wait = False
-        self.bgm = load_wav(bgm)
-        self.bgm.set_volume(32)
+        self.bgm = bgm
+
+    def deepcopy(self):
+        return waitingForSecond(self.orderBoxImage, self.bigIconImage, self.smallIconImage, self.furnitureImage,
+                                self.orderLeft, self.orderTop, self.orderWidth, self.orderHeight,
+                                self.weightX, self.weightY, self.weightMapX, self.weightMapY,
+                                self.furnitureWidth, self.furnitureHeight, self.price, self.bgm,
+                                self.weightList, self.weightMapList, self.bubbleImage)
 
     def click(self):
-        self.bgm.play()
+        self.bgmLoad = load_wav(self.bgm)
+        self.bgmLoad.set_volume(32)
+        self.bgmLoad.play()
         self.wait = True
 
     def waiting(self):
@@ -563,30 +711,81 @@ class waitingForSecond(Myitem):
 
     def draw(self):
         super().draw()
+        if self.bubbleImage:
+            self.bubbleload = load_image(self.bubbleImage)
         if self.ready:
             self.bubbleload.clip_draw(0, 0, 100, 100, gamePlay.mapstartX + gamePlay.boxSizeW * self.xMapIndex +
-                                 self.weightMapX * gamePlay.boxSizeW / 2 - gamePlay.cameraLEFT,
-                                 gamePlay.HEIGHT - (
-                                         gamePlay.mapstartY +
-                                         gamePlay.boxSizeH * self.yMapIndex + gamePlay.boxSizeH * self.weightMapY -
-                                         self.furnitureHeight / 2) + 150 - gamePlay.cameraBOTTOM)
+                                      self.weightMapX * gamePlay.boxSizeW / 2 - gamePlay.cameraLEFT,
+                                      gamePlay.HEIGHT - (
+                                              gamePlay.mapstartY +
+                                              gamePlay.boxSizeH * self.yMapIndex + gamePlay.boxSizeH * self.weightMapY -
+                                              self.furnitureHeight / 2) + 150 - gamePlay.cameraBOTTOM)
+
 
 class noWait(Myitem):
     def __init__(self, orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
                  orderLeft, orderTop, orderWidth, orderHeight,
                  weightX, weightY, weightMapX, weightMapY,
-                 furnitureWidth, furnitureHeight, bgm, weightList=None, weightMapList=None, bubbleImage=None):
+                 furnitureWidth, furnitureHeight, price, bgm, weightList=None, weightMapList=None, bubbleImage=None):
         super().__init__(orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
                          orderLeft, orderTop, orderWidth, orderHeight,
                          weightX, weightY, weightMapX, weightMapY,
-                         furnitureWidth, furnitureHeight, weightList, weightMapList, bubbleImage)
+                         furnitureWidth, furnitureHeight, price, bgm, weightList, weightMapList, bubbleImage)
 
-        self.bubbleload = load_image(self.bubbleImage)
-        self.bgm = load_wav(bgm)
-        self.bgm.set_volume(32)
+        self.bgm = bgm
+
+    def deepcopy(self):
+        return noWait(self.orderBoxImage, self.bigIconImage, self.smallIconImage, self.furnitureImage,
+                      self.orderLeft, self.orderTop, self.orderWidth, self.orderHeight,
+                      self.weightX, self.weightY, self.weightMapX, self.weightMapY,
+                      self.furnitureWidth, self.furnitureHeight, self.price, self.bgm,
+                      self.weightList, self.weightMapList, self.bubbleImage)
 
     def click(self):
-        self.bgm.play()
+        self.bgmLoad = load_wav(self.bgm)
+        self.bgmLoad.set_volume(32)
+        self.bgmLoad.play()
+
+
+class Animal(Myitem):
+    def __init__(self, orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
+                 orderLeft, orderTop, orderWidth, orderHeight,
+                 weightX, weightY, weightMapX, weightMapY,
+                 furnitureWidth, furnitureHeight, price, bgm, weightList=None, weightMapList=None, bubbleImage=None):
+        super().__init__(orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
+                         orderLeft, orderTop, orderWidth, orderHeight,
+                         weightX, weightY, weightMapX, weightMapY,
+                         furnitureWidth, furnitureHeight, price, bgm, weightList, weightMapList, bubbleImage)
+        self.bgm = bgm
+        self.install = False
+        self.timer = 5
+        self.wait_timer = 5
+
+    def deepcopy(self):
+        return Animal(self.orderBoxImage, self.bigIconImage, self.smallIconImage, self.furnitureImage,
+                      self.orderLeft, self.orderTop, self.orderWidth, self.orderHeight,
+                      self.weightX, self.weightY, self.weightMapX, self.weightMapY,
+                      self.furnitureWidth, self.furnitureHeight, self.price, self.bgm,
+                      self.weightList, self.weightMapList, self.bubbleImage)
+
+    def update(self):
+        self.cur_state.do(self)
+        if self.event_que:
+            event = self.event_que.pop()
+            self.cur_state.exit(self)
+            try:
+                self.cur_state = next_state_animal[self.cur_state][event]
+            except KeyError:
+                # print(f'Error: State {self.cur_state.__name__}    Event{event_name[event]}')
+                print('ERROR', self.cur_state.__name__, ' ', event_name[event])
+            self.cur_state.enter(self)
+
+    def click(self):
+        self.bgmLoad = load_wav(self.bgm)
+        self.bgmLoad.set_volume(32)
+        self.bgmLoad.play()
+
+
 class Button:
     Non = 'UI\\buttonNon.png'
     On = 'UI\\buttonOn.png'
