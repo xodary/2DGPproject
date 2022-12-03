@@ -146,12 +146,12 @@ class RUN:
             self.y += self.dirY * RUN_SPEED_PPS * game_framework.frame_time * float(random.randint(8, 11) / 10)
         self.x = clamp(50, self.x, gamePlay.WIDTH - 50)
         self.y = clamp(20, self.y, gamePlay.HEIGHT - 20)
-        rawTop = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY + 13) // gamePlay.boxSizeH,
+        rawTop = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY + 10) // gamePlay.boxSizeH,
                        len(gamePlay.mapping) - 1)
-        rawBottom = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY - 13) // gamePlay.boxSizeH,
+        rawBottom = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY - 10) // gamePlay.boxSizeH,
                           len(gamePlay.mapping) - 1)
-        colLeft = clamp(0, int(self.x - gamePlay.mapstartX - 36) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
-        colRight = clamp(0, int(self.x - gamePlay.mapstartX + 36) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
+        colLeft = clamp(0, int(self.x - gamePlay.mapstartX - 20) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
+        colRight = clamp(0, int(self.x - gamePlay.mapstartX + 20) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
         if gamePlay.mapping[rawTop][colLeft] != 0 or gamePlay.mapping[rawTop][colRight] != 0 or \
                 gamePlay.mapping[rawBottom][colLeft] != 0 or gamePlay.mapping[rawBottom][colRight] != 0:
             self.x = self.oldX
@@ -211,9 +211,58 @@ class INTERACTION:
         col = clamp(0, int(self.x - gamePlay.mapstartX) // gamePlay.boxSizeW + Looking[self.faceDir][1],
                     len(gamePlay.mapping[0]) - 1)
         something = gamePlay.mapping[row][col]
-        #
-        if type(something) == objectClass.Store:
-            something.marketUIopen()
+
+        match type(something):
+            case objectClass.Store:
+                something.marketUIopen()
+            case marketClass.Table:
+                something = something.sittingZombie
+                if something.readyOrder:
+                    # QueueTime.append(113)
+                    something.orderCheck = True
+                # 좀비가 wait 상태이고 컵을 플레이어가 들고있으면 평가들어감
+                elif something.orderCheck and self.item == 'cup':
+                    # 음료의 성공 여부를 좀비에게 전달.
+                    # 음료의 성공 여부 작성.
+                    self.cup = None
+                    self.item = None
+            case marketClass.waitingForSecond:
+                if something.ready:
+                    self.item = something.bubbleImage
+                    something.ready = False
+                elif not something.wait:
+                    something.click()
+            case marketClass.noWait:
+                self.item = something.bubbleImage
+                something.click()
+            # case cupClass.Cup:
+            #     if self.item != 'cup' and self.item is not None:
+            #         something.putItem(self.item)
+            #         self.item = None
+            #     elif self.item is None:
+            #         self.cup = something
+            #         self.item = 'cup'
+            #         mapping[self.cup.yIndex][self.cup.xIndex] = 1
+            #         cups.remove(self.cup)
+            #     elif self.item == 'cup':  # swap
+            #         temp = something
+            #         cups.remove(temp)
+            #         self.cup.yIndex = raw
+            #         self.cup.xIndex = col
+            #         something = self.cup
+            #         cups.append(self.cup)
+            #         self.cup = temp
+            # case objectClass.objectIndex:
+            #     self.item = something.spacebar()
+            #     if something in trashes:
+            #         self.item = None
+            #     if self.item == 'cup':
+            #         self.cup.yIndex = raw
+            #         self.cup.xIndex = col
+            #         mapping[self.cup.yIndex][self.cup.xIndex] = self.cup
+            #         cups.append(self.cup)
+            #         self.cup = None
+            #         self.item = None
 
     def exit(self):
         print('Exit INTERACTION')
@@ -361,13 +410,16 @@ class Pinn:
                 self.bubble = None
             else:
                 match type(something):
-                    case marketClass.Myitem:
-                        if something.cur_state.bubbleTest(something):
+                    case marketClass.noWait:
+                        self.bubble = objectClass.Bubble(*something.cur_state.makeBubble(something))
+                        AllObjectClass.add_object(self.bubble, 2)
+                    case marketClass.waitingForSecond:
+                        if not something.wait and not something.ready:
                             self.bubble = objectClass.Bubble(*something.cur_state.makeBubble(something))
                             AllObjectClass.add_object(self.bubble, 2)
                     case objectClass.Store:
-                            self.bubble = objectClass.Bubble(*something.makeBubble())
-                            AllObjectClass.add_object(self.bubble, 2)
+                        self.bubble = objectClass.Bubble(*something.makeBubble())
+                        AllObjectClass.add_object(self.bubble, 2)
         self.something = something
 
     def update(self):

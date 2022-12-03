@@ -112,25 +112,7 @@ class BackGround:
         self.image.clip_draw(gamePlay.cameraLEFT, gamePlay.cameraBOTTOM,
                              gamePlay.viewWIDTH, gamePlay.viewHEIGHT,
                              gamePlay.viewWIDTH // 2, gamePlay.viewHEIGHT // 2)
-class TABLE(interactionTOOL):
-    def __init__(self, xIndex, yIndex, wIndex, hIndex, width, height, pngName, itemBubble=None, bubbleSize=80):
-        super().__init__(xIndex, yIndex, wIndex, hIndex, width, height, pngName, itemBubble, bubbleSize)
-        self.sit = False
 
-    def update(self):
-        pass
-
-    def SIT(self):
-        self.sit = True
-
-    def WAKEUP(self):
-        self.sit = False
-
-    def CHECKTABLE(self):
-        return self.sit
-    def draw(self):
-        self.image.draw(self.x - gamePlay.cameraLEFT, self.y - gamePlay.cameraBOTTOM)
-        # self.image.draw(self.x, self.y)
 
 class fire(WALL):
     TIME_PER_ACTION = 0.2

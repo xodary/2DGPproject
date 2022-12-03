@@ -1,3 +1,4 @@
+import game_framework
 from pico2d import *
 import gamePlay
 import marketFramework
@@ -7,8 +8,8 @@ import marketMap
 
 
 class MarketUI_Background:
-    menuL, menuR, menuB, menuT = 189, 189 + 700, 1280 - (270 + 695), 1920 - 270
-    itemL, itemR, itemB, itemT = 1041, 1041 + 707, 1280 - (270 + 678), 1920 - 270
+    menuL, menuR, menuB, menuT = 189, 189 + 700, 1280 - (270 + 695), 1280 - 270
+    itemL, itemR, itemB, itemT = 1041, 1041 + 707, 1280 - (270 + 678), 1280 - 270
 
     def __init__(self):
         self.image = load_image('UI\\marketUI.png')
@@ -40,10 +41,29 @@ class MarketUI_Background:
                     AllObjectClass.remove_object(order)
                 self.buttonNum = button.returnButton()
                 AllObjectClass.add_objects(self.items[self.buttonNum], 5)
-        # push menu items
-        for item in self.items[self.buttonNum]:
-            if item.cur_state.mouseTest(item, x, y):
-                return item.cur_state.makeBigIcon(item, x, y)
+                return None
+        # push items
+        if MarketUI_Background.itemL <= x <= MarketUI_Background.itemR and \
+                MarketUI_Background.itemB <= y <= MarketUI_Background.itemT:
+            mx = (x - MarketUI_Background.itemL) // BIGICON.imageW
+            my = (MarketUI_Background.itemT - y) // BIGICON.imageH
+            item = pinnClass.Pinn.myitems[my][mx]
+            if item:
+                AllObjectClass.remove_object(item)
+                AllObjectClass.add_object(item, 6)
+                pinnClass.Pinn.myitemList.remove(item)
+                # 팔기
+                for y in range(item.weightY):
+                    for x in range(item.weightX):
+                        if item.weightList[y][x] == 1:
+                            pinnClass.Pinn.myitems[item.yIndex + y][item.xIndex + x] = None
+                return item
+        # 사기
+        elif MarketUI_Background.menuL <= x <= MarketUI_Background.menuR and \
+                MarketUI_Background.menuB <= y <= MarketUI_Background.menuT:
+            for menu in self.items[self.buttonNum]:
+                if menu.cur_state.mouseTest(menu, x, y):
+                    return menu.cur_state.makeBigIcon(menu, x, y)
         return None
 
     def MouseMotion(self, x, y, mouseOn):
@@ -396,7 +416,7 @@ class FURNITURE:
             yCenter + self.furnitureHeight / 2 - self.weightMapY * gamePlay.boxSizeH / 2) // gamePlay.boxSizeH
         print(self.xMapIndex, self.yMapIndex)
         if 0 <= self.xMapIndex - gamePlay.MainMapPlusX and \
-                self.xMapIndex - gamePlay.MainMapPlusX + self.weightMapX - 1 < 16 and \
+                self.xMapIndex - gamePlay.MainMapPlusX + self.weightMapX - 1 < 32 and \
                 0 <= self.yMapIndex - gamePlay.MainMapPlusY and \
                 0 <= self.yMapIndex - gamePlay.MainMapPlusY + self.weightMapY - 1 < 9 and gamePlay.MAINMAP:
             for y in range(self.weightMapY):
@@ -416,6 +436,7 @@ class FURNITURE:
                     gamePlay.mapping[self.yMapIndex + y][self.xMapIndex + x] = self
         gamePlay.furnitureList.append(self)
         self.fit = True
+        self.woodyHit.play()
         self.down = gamePlay.mapstartX + gamePlay.MainMapPlusX * gamePlay.boxSizeW + \
                     self.yMapIndex * gamePlay.boxSizeH + self.weightMapY * gamePlay.boxSizeH / 2
 
@@ -460,6 +481,7 @@ class Myitem:
         self.cur_state = ORDERBOX
         self.cur_state.enter(self)
         self.down = 0
+        self.woodyHit = load_wav('sound\\woodyHit.wav')
 
     def __getstate__(self):
         state = {'xIndex': self.xIndex, 'yIndex': self.yIndex,
@@ -493,6 +515,78 @@ class Myitem:
         self.cur_state.draw(self)
 
 
+class Table(Myitem):
+    def __init__(self, orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
+                 orderLeft, orderTop, orderWidth, orderHeight,
+                 weightX, weightY, weightMapX, weightMapY,
+                 furnitureWidth, furnitureHeight, weightList=None, weightMapList=None, bubbleImage=None):
+        super().__init__(orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
+                         orderLeft, orderTop, orderWidth, orderHeight,
+                         weightX, weightY, weightMapX, weightMapY,
+                         furnitureWidth, furnitureHeight, weightList, weightMapList, bubbleImage)
+        self.sit = False
+        self.sittingZombie = None
+
+
+class waitingForSecond(Myitem):
+    def __init__(self, orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
+                 orderLeft, orderTop, orderWidth, orderHeight,
+                 weightX, weightY, weightMapX, weightMapY,
+                 furnitureWidth, furnitureHeight, bgm=None, weightList=None, weightMapList=None, bubbleImage=None):
+        super().__init__(orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
+                         orderLeft, orderTop, orderWidth, orderHeight,
+                         weightX, weightY, weightMapX, weightMapY,
+                         furnitureWidth, furnitureHeight, weightList, weightMapList, bubbleImage)
+
+        self.waitingTime = 3
+        self.bubbleload = load_image(self.bubbleImage)
+        self.ready = False
+        self.wait = False
+        self.bgm = load_wav(bgm)
+        self.bgm.set_volume(32)
+
+    def click(self):
+        self.bgm.play()
+        self.wait = True
+
+    def waiting(self):
+        self.waitingTime -= game_framework.frame_time
+        if self.waitingTime <= 0:
+            self.waitingTime = 3
+            self.ready = True
+            self.wait = False
+
+    def update(self):
+        super().update()
+        if self.wait:
+            self.waiting()
+
+    def draw(self):
+        super().draw()
+        if self.ready:
+            self.bubbleload.clip_draw(0, 0, 100, 100, gamePlay.mapstartX + gamePlay.boxSizeW * self.xMapIndex +
+                                 self.weightMapX * gamePlay.boxSizeW / 2 - gamePlay.cameraLEFT,
+                                 gamePlay.HEIGHT - (
+                                         gamePlay.mapstartY +
+                                         gamePlay.boxSizeH * self.yMapIndex + gamePlay.boxSizeH * self.weightMapY -
+                                         self.furnitureHeight / 2) + 150 - gamePlay.cameraBOTTOM)
+
+class noWait(Myitem):
+    def __init__(self, orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
+                 orderLeft, orderTop, orderWidth, orderHeight,
+                 weightX, weightY, weightMapX, weightMapY,
+                 furnitureWidth, furnitureHeight, bgm, weightList=None, weightMapList=None, bubbleImage=None):
+        super().__init__(orderBoxImage, bigIconImage, smallIconImage, furnitureImage,
+                         orderLeft, orderTop, orderWidth, orderHeight,
+                         weightX, weightY, weightMapX, weightMapY,
+                         furnitureWidth, furnitureHeight, weightList, weightMapList, bubbleImage)
+
+        self.bubbleload = load_image(self.bubbleImage)
+        self.bgm = load_wav(bgm)
+        self.bgm.set_volume(32)
+
+    def click(self):
+        self.bgm.play()
 class Button:
     Non = 'UI\\buttonNon.png'
     On = 'UI\\buttonOn.png'
