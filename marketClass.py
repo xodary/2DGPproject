@@ -1,4 +1,5 @@
 import game_framework
+import recipeClass
 from pico2d import *
 import gamePlay
 import marketFramework
@@ -6,7 +7,7 @@ import pinnClass
 import AllObjectClass
 import marketMap
 import animalRoomFramework
-import BehaviorTree
+import zombieClass
 
 class MarketUI_Background:
     menuL, menuR, menuB, menuT = 189, 189 + 700, 1280 - (270 + 695), 1280 - 270
@@ -17,6 +18,7 @@ class MarketUI_Background:
         self.items = None
         self.buttons = None
         self.buttonNum = 0
+        self.font = load_font(gamePlay.font, 70)
         for item in pinnClass.Pinn.myitemList:
             item.add_event(MAKEBIGICON)
             item.fit = True
@@ -27,6 +29,7 @@ class MarketUI_Background:
 
     def draw(self):
         self.image.draw(gamePlay.viewWIDTH // 2, gamePlay.viewHEIGHT // 2)
+        self.font.draw(1150, 1280 - 1040, f'Money : {gamePlay.pinn.money}', (100, 100, 0))
 
     def GetItems(self, items, buttons):
         self.items = items
@@ -46,8 +49,8 @@ class MarketUI_Background:
         # push items
         if MarketUI_Background.itemL <= x <= MarketUI_Background.itemR and \
                 MarketUI_Background.itemB <= y <= MarketUI_Background.itemT:
-            mx = (x - MarketUI_Background.itemL) // BIGICON.imageW
-            my = (MarketUI_Background.itemT - y) // BIGICON.imageH
+            mx = clamp(0, (x - MarketUI_Background.itemL) // BIGICON.imageW, 5)
+            my = clamp(0, (MarketUI_Background.itemT - y) // BIGICON.imageH, 5)
             item = pinnClass.Pinn.myitems[my][mx]
             if item:
                 AllObjectClass.remove_object(item)
@@ -63,8 +66,22 @@ class MarketUI_Background:
         elif MarketUI_Background.menuL <= x <= MarketUI_Background.menuR and \
                 MarketUI_Background.menuB <= y <= MarketUI_Background.menuT:
             for menu in self.items[self.buttonNum]:
+                if isinstance(menu, recipeClass.Recipe):
+                    if menu.mouseTest(x, y):
+                        if gamePlay.pinn.money - menu.price >= 0 and \
+                                not (menu.menuImage, menu.priceOne) in zombieClass.Zombie.OnMenu:
+                            gamePlay.pinn.money -= menu.price
+                            zombieClass.Zombie.OnMenu.append((menu.menuImage, menu.priceOne))
+                            self.success = load_wav('sound\\achievement.wav')
+                            self.success.play()
+                        else:
+                            self.success = load_wav('sound\\fail.wav')
+                            self.success.play()
+                    return None
                 if menu.cur_state.mouseTest(menu, x, y):
-                    return menu.cur_state.makeBigIcon(menu, x, y)
+                    icon = menu.cur_state.makeBigIcon(menu, x, y)
+                    gamePlay.pinn.money -= icon.price
+                    return icon
         return None
 
     def MouseMotion(self, x, y, mouseOn):
@@ -81,18 +98,37 @@ class MarketUI_Background:
             else:
                 mouseOn.fit = False
         for item in self.items[self.buttonNum]:
-            if item.cur_state.mouseTest(item, x, y):
-                item.MouseOn = True
+            if isinstance(item, recipeClass.Recipe):
+                if item.mouseTest(x, y):
+                    item.MouseOn = True
+                else:
+                    item.MouseOn = False
             else:
-                item.MouseOn = False
+                if item.cur_state.mouseTest(item, x, y):
+                    item.MouseOn = True
+                else:
+                    item.MouseOn = False
 
     def MouseButtonUp(self, mouseOn):
         if mouseOn:
             if mouseOn.cur_state.mouseOffTest(mouseOn):
-                mouseOn.cur_state.success(mouseOn)
-                marketFramework.itemImages.append(mouseOn)
+                if gamePlay.pinn.money >= 0:
+                    mouseOn.cur_state.success(mouseOn)
+                    marketFramework.itemImages.append(mouseOn)
+                    self.coinSound = load_wav('sound\\woodyStep.wav')
+                    self.coinSound.play()
+                else:
+                    gamePlay.pinn.money += mouseOn.price
+                    AllObjectClass.remove_object(mouseOn)
+                    self.coinSound = load_wav('sound\\fail.wav')
+                    self.coinSound.set_volume(50)
+                    self.coinSound.play()
             else:
+                gamePlay.pinn.money += mouseOn.price
                 AllObjectClass.remove_object(mouseOn)
+                self.coinSound = load_wav('sound\\coins.wav')
+                self.coinSound.set_volume(50)
+                self.coinSound.play()
 
     def exit(self):
         for item in self.items[self.buttonNum]:
@@ -104,7 +140,7 @@ class MarketUI_Background:
 
 class Inventory:
     itemUIleft, itemUItop = 1920 - 176 * 4, 197 * 4
-    # itemUIright, itemUIbottom = 1920 - 176 * 4, 197 * 4
+    itemUIright, itemUIbottom = 1920, 197 * 4
     image = 'UI\\itemUI.png'
     ImageW = 176 * 4
     ImageH = 197 * 4
@@ -120,17 +156,20 @@ class Inventory:
         self.x = gamePlay.viewWIDTH - self.width // 2
         self.y = self.height // 2
         self.tempXindex, self.tempYindex = 0, 0
+        self.font = load_font(gamePlay.font, 60)
 
     def update(self):
         pass
 
     def draw(self):
         self.image.clip_draw(0, 0, self.ImageW, self.ImageH, self.x, self.y, self.width, self.height)
+        self.font.draw(Inventory.itemUIleft + 130, Inventory.itemUItop - 675,
+                       f'Money : {gamePlay.pinn.money}', (100, 100, 0))
 
     def MouseButtonDown(self, x, y):
         click = None
-        if Inventory.itemUIleft <= x <= gamePlay.viewWIDTH and \
-                0 <= y <= Inventory.itemUItop:
+        if Inventory.itemUIleft - SMALLICON.left <= x <= gamePlay.viewWIDTH - SMALLICON.right and \
+                SMALLICON.bottom <= y <= Inventory.itemUItop - SMALLICON.top:
             mx = (x - Inventory.itemUIleft - SMALLICON.left) // SMALLICON.width
             my = (Inventory.itemUItop - SMALLICON.top - y) // SMALLICON.height
             click = pinnClass.Pinn.myitems[my][mx]
@@ -145,6 +184,8 @@ class Inventory:
                             pinnClass.Pinn.myitems[click.yIndex + y][click.xIndex + x] = None
 
         else:
+            if gamePlay.animalRoom:
+                return click
             mx = (x + gamePlay.cameraLEFT - gamePlay.mapstartX) // gamePlay.boxSizeW
             my = (gamePlay.HEIGHT - y - gamePlay.cameraBOTTOM - gamePlay.mapstartY) // gamePlay.boxSizeH
             holding = gamePlay.mapping[my][mx]
@@ -174,7 +215,8 @@ class Inventory:
                 click.add_event(MAKEFURNITURE)
                 AllObjectClass.remove_object(click)
                 AllObjectClass.add_object(click, 1)
-                if click.cur_state.mouseOffTest(click) and not gamePlay.animalRoom:
+                if (click.cur_state.mouseOffTest(click) and not isinstance(click, Animal)) or (
+                        click.cur_state.mouseOffTest(click) and (isinstance(click, Animal)) and gamePlay.animalRoom):
                     click.fit = True
                 else:
                     click.fit = False
@@ -251,7 +293,9 @@ class BIGICON:
     imageW = 108
     imageH = 108
     left = 1041
+    right = 181
     top = 270
+    bottom = 330
     diffW = 10
     diffH = 6
 
@@ -303,6 +347,7 @@ class BIGICON:
 
 class SMALLICON:
     left, top = 104, 160
+    right, bottom = 105, 156
     width, height = 84, 80
     imageW, imageH = 76, 76
     diffW = 8
@@ -493,6 +538,13 @@ class ANIMAL:
     def draw(self):
 
         if self.furnitureImage == 'character1.6\\cow.png':
+            if self.fit:
+                self.image.clip_draw(int(self.frame) * 256,
+                                     1280 - (int(self.line) + 1) * 256,
+                                     256, 256,
+                                     animalRoomFramework.left + self.xIndex * gamePlay.boxSizeW,
+                                     animalRoomFramework.top - self.yIndex * gamePlay.boxSizeH)
+                return
             if self.line < 0:
                 self.image.clip_composite_draw(int(self.frame) * 256,
                                      1280 - (int(1) + 1) * 256,
@@ -504,6 +556,13 @@ class ANIMAL:
                                  256, 256,
                                  self.xPos, self.yPos)
         else:
+            if self.fit:
+                self.image.clip_draw(int(self.frame) * 128,
+                                 896 - (int(self.line) + 1) * 128,
+                                 128, 128,
+                                 animalRoomFramework.left + self.xIndex * gamePlay.boxSizeW,
+                                 animalRoomFramework.top - self.yIndex * gamePlay.boxSizeH)
+                return
             self.image.clip_draw(int(self.frame) * 128,
                                  896 - (int(self.line) + 1) * 128,
                                  128, 128,
@@ -512,12 +571,16 @@ class ANIMAL:
     def mouseOffTest(self):
         if (gamePlay.animalRoom and animalRoomFramework.left < self.xPos < animalRoomFramework.right and
                 animalRoomFramework.bottom < self.yPos < animalRoomFramework.top):
+            self.xIndex = int(self.xPos - animalRoomFramework.left) // gamePlay.boxSizeW
+            self.yIndex = int(animalRoomFramework.top - self.yPos) // gamePlay.boxSizeH
+            print(self.xIndex, self.yIndex)
             return True
         else:
             return False
 
     def success(self):
         animalRoomFramework.animalList.append(self)
+        self.fit = False
         self.install = True
 
     def Wander(self):
@@ -532,6 +595,9 @@ class ANIMAL:
         #     return BehaviorTree.RUNNING
 
     def Wait(self):
+        self.bgmLoad = load_wav(self.bgm)
+        self.bgmLoad.set_volume(32)
+        self.bgmLoad.play()
         self.speed = 0
         if self.furnitureImage == 'character1.6\\cow.png':
             self.line = 4
@@ -602,6 +668,7 @@ class Myitem:
         self.cur_state.enter(self)
         self.down = 0
         self.bgm = bgm
+        self.xIndex, self.yIndex = 0, 0
         self.price = price
         self.frame, self.line = 0, 0
         self.xPos, self.yPos = 0, 0

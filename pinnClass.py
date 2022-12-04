@@ -38,17 +38,20 @@ class IDLE:
         self.line = 0
         if event == INVEN:
             self.ComeonInven()
+
     def exit(self):
         pass
+
     def do(self):
         self.bubbleCheck()
-    def draw(self):
 
+    def draw(self):
         self.character.clip_draw(self.faceDir * Pinn.pinnImageX,
                                  (2016 - Pinn.pinnImageY * (self.line + 1)),
                                  Pinn.pinnImageX, Pinn.pinnImageY,
                                  self.x - gamePlay.cameraLEFT,
                                  self.y + Pinn.pinnImageY / 2 - 45 - gamePlay.cameraBOTTOM)
+
 
 class RUN:
     def enter(self, event):
@@ -111,14 +114,33 @@ class RUN:
 
     def exit(self):
         print('Exit RUN')
+        self.woodFloor.set_volume(0)
+        self.concreteFloor.set_volume(0)
+        self.animalRoom.set_volume(0)
 
     def do(self):
+        if not gamePlay.animalRoom:
+            if gamePlay.MAINMAP:
+                if 1060 < self.x < 1060 + 900 and 600 < self.y < 1100:
+                    self.woodFloor.set_volume(50)
+                    self.concreteFloor.set_volume(0)
+                else:
+                    self.woodFloor.set_volume(0)
+                    self.concreteFloor.set_volume(50)
+            else:
+                self.woodFloor.set_volume(0)
+                self.concreteFloor.set_volume(50)
+        else:
+            self.animalRoom.set_volume(50)
+            self.concreteFloor.set_volume(0)
+            self.woodFloor.set_volume(0)
+
         self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 6
         # move checking
         self.down = self.y - 35
         if self.dirX * self.dirY != 0:
             self.x += self.dirX * RUN_SPEED_PPS * game_framework.frame_time * (1 / math.sqrt(2)) * \
-                        float(random.randint(8, 11) / 10)
+                      float(random.randint(8, 11) / 10)
             self.y += self.dirY * RUN_SPEED_PPS * game_framework.frame_time * (1 / math.sqrt(2)) * \
                       float(random.randint(8, 11) / 10)
         else:
@@ -139,7 +161,8 @@ class RUN:
             rawBottom = clamp(0, int(gamePlay.HEIGHT - self.y - gamePlay.mapstartY - 10) // gamePlay.boxSizeH,
                               len(gamePlay.mapping) - 1)
             colLeft = clamp(0, int(self.x - gamePlay.mapstartX - 20) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
-            colRight = clamp(0, int(self.x - gamePlay.mapstartX + 20) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
+            colRight = clamp(0, int(self.x - gamePlay.mapstartX + 20) // gamePlay.boxSizeW,
+                             len(gamePlay.mapping[0]) - 1)
         if gamePlay.mapping[rawTop][colLeft] != 0 or gamePlay.mapping[rawTop][colRight] != 0 or \
                 gamePlay.mapping[rawBottom][colLeft] != 0 or gamePlay.mapping[rawBottom][colRight] != 0:
             self.x = self.oldX
@@ -211,53 +234,102 @@ class INTERACTION:
             case objectClass.Store:
                 something.marketUIopen()
             case marketClass.Table:
+                if not something.sittingZombie:
+                    return
                 something = something.sittingZombie
                 if something.readyOrder:
                     # QueueTime.append(113)
                     something.orderCheck = True
                 # 좀비가 wait 상태이고 컵을 플레이어가 들고있으면 평가들어감
-                elif something.orderCheck and self.item == 'cup':
+                elif something.orderCheck and self.item == 'bubble\\cup.png':
                     # 음료의 성공 여부를 좀비에게 전달.
-                    # 음료의 성공 여부 작성.
+                    if self.cup.checkCup(something.menu):
+                        something.success = True
+                    else:
+                        something.fail = True
                     self.cup = None
                     self.item = None
             case marketClass.waitingForSecond:
-                if something.ready:
+                if something.ready and not self.item:
                     self.item = something.bubbleImage
                     something.ready = False
                 elif not something.wait:
                     something.click()
             case marketClass.noWait:
-                self.item = something.bubbleImage
-                something.click()
-            # case cupClass.Cup:
-            #     if self.item != 'cup' and self.item is not None:
-            #         something.putItem(self.item)
-            #         self.item = None
-            #     elif self.item is None:
-            #         self.cup = something
-            #         self.item = 'cup'
-            #         mapping[self.cup.yIndex][self.cup.xIndex] = 1
-            #         cups.remove(self.cup)
-            #     elif self.item == 'cup':  # swap
-            #         temp = something
-            #         cups.remove(temp)
-            #         self.cup.yIndex = raw
-            #         self.cup.xIndex = col
-            #         something = self.cup
-            #         cups.append(self.cup)
-            #         self.cup = temp
-            # case objectClass.objectIndex:
-            #     self.item = something.spacebar()
-            #     if something in trashes:
-            #         self.item = None
-            #     if self.item == 'cup':
-            #         self.cup.yIndex = raw
-            #         self.cup.xIndex = col
-            #         mapping[self.cup.yIndex][self.cup.xIndex] = self.cup
-            #         cups.append(self.cup)
-            #         self.cup = None
-            #         self.item = None
+                if not self.item:
+                    self.item = something.bubbleImage
+                    something.click()
+                    if something.furnitureImage == 'map1.6\\cuptableSmall.png':
+                        self.cup = cupClass.Cup()
+
+            case cupClass.Cup:
+                if self.item != 'bubble\\cup.png' and self.item:
+                    something.putItem(self.item)
+                    self.item = None
+                elif self.item != 'bubble\\cup.png' and not self.item:
+                    self.cup = something
+                    self.item = 'bubble\\cup.png'
+                    for n in range(3):
+                        gamePlay.mapping[self.cup.yIndex][self.cup.xIndex - 1 + n] = self.tempTableInform
+                    gamePlay.furnitureList.remove(self.cup)
+                    AllObjectClass.remove_object(self.cup)
+                elif self.item == 'bubble\\cup.png':  # swap
+                    gamePlay.furnitureList.remove(something)
+                    AllObjectClass.remove_object(something)
+                    self.cup.yIndex = something.yIndex
+                    self.cup.xIndex = something.xIndex
+                    gamePlay.furnitureList.append(self.cup)
+                    AllObjectClass.add_object(self.cup, 1)
+                    for n in range(3):
+                        gamePlay.mapping[self.cup.yIndex][self.cup.xIndex - 1 + n] = self.cup
+                    self.cup = something
+
+            case marketClass.Myitem:
+                if something.furnitureImage == 'map1.6\\trash.png':
+                    self.item = None
+                    return
+                if something.furnitureImage == 'map1.6\\kitchenTable.png':
+                    if self.item != 'bubble\\cup.png':
+                        for n in range(3):
+                            if type(gamePlay.mapping[row][col - 1 + n]) == cupClass.Cup:
+                                something = gamePlay.mapping[row][col - 1 + n]
+
+                                if self.item != 'bubble\\cup.png' and self.item:
+                                    something.putItem(self.item)
+                                    self.item = None
+                                elif self.item != 'bubble\\cup.png' and not self.item:
+                                    self.cup = something
+                                    self.item = 'bubble\\cup.png'
+                                    for a in range(3):
+                                        gamePlay.mapping[self.cup.yIndex][
+                                            self.cup.xIndex - 1 + a] = self.tempTableInform
+                                    gamePlay.furnitureList.remove(self.cup)
+                                    AllObjectClass.remove_object(self.cup)
+                                elif self.item == 'bubble\\cup.png':  # swap
+                                    gamePlay.furnitureList.remove(something)
+                                    AllObjectClass.remove_object(something)
+                                    self.cup.yIndex = something.yIndex
+                                    self.cup.xIndex = something.xIndex
+                                    gamePlay.furnitureList.append(self.cup)
+                                    AllObjectClass.add_object(self.cup, 1)
+                                    for a in range(3):
+                                        gamePlay.mapping[self.cup.yIndex][self.cup.xIndex - 1 + a] = self.cup
+                                    self.cup = something
+                        return
+
+                    for n in range(3):
+                        if type(gamePlay.mapping[row][col - 1 + n]) != marketClass.Myitem or \
+                                gamePlay.mapping[row][col - 1 + n].furnitureImage != 'map1.6\\kitchenTable.png':
+                            return
+                    self.cup.yIndex = row
+                    self.cup.xIndex = col
+                    self.tempTableInform = something
+                    self.cup.down = self.tempTableInform.down - 1
+                    gamePlay.mapping[self.cup.yIndex][self.cup.xIndex] = self.cup
+                    gamePlay.furnitureList.append(self.cup)
+                    AllObjectClass.add_object(self.cup, 1)
+                    self.cup = None
+                    self.item = None
 
     def exit(self):
         print('Exit INTERACTION')
@@ -272,11 +344,12 @@ class INTERACTION:
                                  self.x - gamePlay.cameraLEFT,
                                  self.y + Pinn.pinnImageY / 2 - 45 - gamePlay.cameraBOTTOM)
 
+
 next_state = {
-    IDLE:  {RU: RUN,  LU: RUN,  RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN, SPACE: INTERACTION, STOP: IDLE},
-    RUN:   {RU: RUN, LU: RUN, RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN, SPACE: INTERACTION, STOP: IDLE},
+    IDLE: {RU: RUN, LU: RUN, RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN, SPACE: INTERACTION, STOP: IDLE},
+    RUN: {RU: RUN, LU: RUN, RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN, SPACE: INTERACTION, STOP: IDLE},
     INTERACTION: {RU: RUN, LU: RUN, RD: RUN, LD: RUN, NU: RUN, SU: RUN, ND: RUN, SD: RUN,
-                  SPACE: RUN, STOP: IDLE, ESC: IDLE},
+                  SPACE: INTERACTION, STOP: IDLE, ESC: IDLE},
 }
 
 PIXEL_PER_METER = 10.0 / 0.1
@@ -287,6 +360,7 @@ RUN_SPEED_PPS = RUN_SPEED_MPS * PIXEL_PER_METER
 TIME_PER_ACTION = 0.15
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
 FRAMES_PER_ACTION = 2
+
 
 class Pinn:
     pinnImage = 'character1.6\\pinn.png'
@@ -299,6 +373,7 @@ class Pinn:
     myitems = [[None for i in range(6)] for j in range(6)]
     myitemList = []
 
+
     def __init__(self):
         self.character = load_image(Pinn.pinnImage)
         self.frame = 0
@@ -307,6 +382,15 @@ class Pinn:
         self.down = self.y - 35
         self.oldX = self.x
         self.oldY = self.y
+        self.woodFloor = load_wav('sound\\footWood.wav')
+        self.woodFloor.repeat_play()
+        self.woodFloor.set_volume(0)
+        self.concreteFloor = load_wav('sound\\footConcrete.wav')
+        self.concreteFloor.repeat_play()
+        self.concreteFloor.set_volume(0)
+        self.animalRoom = load_wav('sound\\animalRoom.wav')
+        self.animalRoom.repeat_play()
+        self.animalRoom.set_volume(0)
         self.dirX = 0
         self.dirY = 0
         self.line = 0
@@ -319,6 +403,7 @@ class Pinn:
         self.event_que = []
         self.cur_state = IDLE
         self.cur_state.enter(self, None)
+        self.money = 10
 
     def add_event(self, event):
         self.event_que.insert(0, event)
@@ -329,65 +414,13 @@ class Pinn:
             self.add_event(key_event)
 
 
-                # object = mapping[raw][col]
-
-                # match type(object):
-                #     case zombieClass.Zombie:
-                #         if mapping[raw][col].cur_state == zombieClass.READY:
-                #             menuQueue.append(mapping[raw][col].menu)
-                #             QueueTime.append(113)
-                #             mapping[raw][col].add_state(zombieClass.WAIT)
-                #         #좀비가 wait 상태이고 컵을 플레이어가 들고있으면 평가들어감
-                #         elif mapping[raw][col].cur_state == zombieClass.WAIT and \
-                #             self.item == 'cup':
-                #             # 음료의 성공 여부를 좀비에게 전달.
-                #             mapping[raw][col].cur_state(self.cup.checkCup(mapping[raw][col].menu))
-                #             self.cup = None
-                #             self.item = None
-                #     case cupClass.Cup:
-                #         if self.item != 'cup' and self.item is not None:
-                #             mapping[raw][col].putItem(self.item)
-                #             self.item = None
-                #         elif self.item is None:
-                #             self.cup = mapping[raw][col]
-                #             self.item = 'cup'
-                #             mapping[self.cup.yIndex][self.cup.xIndex] = 1
-                #             cups.remove(self.cup)
-                #         elif self.item == 'cup':    # swap
-                #             temp = mapping[raw][col]
-                #             cups.remove(temp)
-                #             self.cup.yIndex = raw
-                #             self.cup.xIndex = col
-                #             mapping[raw][col] = self.cup
-                #             cups.append(self.cup)
-                #             self.cup = temp
-                #     case objectClass.objectIndex:
-                #         self.item = mapping[raw][col].spacebar()
-                #         if mapping[raw][col] in trashes:
-                #             self.item = None
-                #         if self.item == 'cup':
-                #             self.cup.yIndex = raw
-                #             self.cup.xIndex = col
-                #             mapping[self.cup.yIndex][self.cup.xIndex] = self.cup
-                #             cups.append(self.cup)
-                #             self.cup = None
-                #             self.item = None
-
     def draw(self):
         self.cur_state.draw(self)
-        debug_print('PPPP')
-        debug_print(f'Face Dir: {self.faceDir}, DirX: {self.dirX}, DirY: {self.dirY}')
-
-        # if self.item is not None:
-        #     match self.item:
-        #         case 'shot':
-        #             self.coffee.draw(self.x, self.y + 130)
-        #         case 'blood':
-        #             self.blood.draw(self.x, self.y + 130)
-        #         case 'milk':
-        #             self.milk.draw(self.x, self.y + 130)
-        #         case 'cup':
-        #             self.cupBubble.draw(self.x, self.y + 140)
+        if self.item:
+            drawingBubble = load_image(self.item)
+            drawingBubble.clip_draw(0, 0, 100, 100,
+                                    self.x - gamePlay.cameraLEFT,
+                                    self.y + 220 - gamePlay.cameraBOTTOM)
 
         # 입체감
 

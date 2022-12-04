@@ -8,7 +8,7 @@ import gamePlay
 left = 550
 top = 1280 - 569
 right = 1500
-bottom = 1280 - 550 - 383
+bottom = 1280 - 550 - 370
 width = right - left
 height = top - bottom
 animalMap = [[0 for n in range(16)] for m in range(7)]

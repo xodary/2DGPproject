@@ -29,35 +29,44 @@ class Zombie:
                 "character1.6\\girlB.png"),
                ("character1.6\\boy.png",
                 "character1.6\\boyB.png")]
-    menu = ['bloodAme', 'Latte']
+    # menu = [, (, 2),
+    #         ('order\\eggLatte.png', 3), ('order\\finger.png', 4)]
+    OnMenu = [('order\\bloodAmericano.png', 1)]
     orderSignal = 'bubble\\signal.png'
     moveChoice = [(1, 0), (-1, 0), (0, 1), (0, -1)]
     bar = "bubble\\bar.png"
     gauge = "bubble\\gauge.png"
+    success = 'bubble\\bubbleYes.png'
+    fail = 'bubble\\bubbleNo.png'
 
     def __init__(self):
         image, BirthImage = random.choice(Zombie.Genders)
         self.image = load_image(image)
         self.BirthImage = load_image(BirthImage)
         self.bubbleImage = load_image(Zombie.orderSignal)
+        self.bubblesuccessImage = load_image(Zombie.success)
+        self.bubblefailImage = load_image(Zombie.fail)
         self.bar = load_image(Zombie.bar)
         self.gauge = load_image(Zombie.gauge)
         self.BirthingBool = True
         self.bubbleFrame = 0
         self.chairX, self.chairY = 0, 0
         self.frame, self.line = 0, 0
-        self.xPos, self.yPos = random.randrange(gamePlay.WIDTH), random.randrange(gamePlay.entranceY)
+        self.xPos, self.yPos = random.randrange(50, gamePlay.WIDTH - 50), random.randrange(200, gamePlay.entranceY)
+        self.oldX = self.xPos
+        self.oldY = self.yPos
         self.xDir, self.yDir = 0, 0
-        self.timer = 1.0
-        self.wait_timer = 2.0
+        self.timer = 3.0
+        self.wait_timer = 3.0
         self.birthingTime = 3
         self.birthCount = 0
         self.dirX, self.dirY = 0, 0
         self.SittingTable = None
-        self.menu = None
+        self.menu, self.pay = random.choice(Zombie.OnMenu)
         self.down = self.yPos - Zombie.zombieHeight / 2
         self.speed = RUN_SPEED_PPS
         self.build_behavior_tree()
+        self.Wandering = True
         self.waitingTime = 30
         self.readyOrder, self.orderCheck, self.waitngOrder = False, False, False
         self.success, self.fail = False, False
@@ -67,14 +76,26 @@ class Zombie:
         if self.readyOrder:
             self.bubbleFrame = (self.bubbleFrame +
                                 FRAMES_PER_ACTION_BUBBLE * ACTION_PER_TIME_BUBBLE * game_framework.frame_time) % 4
+        if self.success or self.fail:
+            self.bubbleFrame = (self.bubbleFrame +
+                                FRAMES_PER_ACTION_BUBBLE * ACTION_PER_TIME_BUBBLE * game_framework.frame_time) % 4
         if self.BirthingBool:
             self.birthCount = int((1 - self.birthingTime / 3) * 12)
             self.line = self.birthCount // 4
             self.frame = self.birthCount % 4
             print(self.birthCount, self.line, self.frame)
         else:
+
             self.xPos = clamp(0, self.xPos + self.speed * self.dirX * game_framework.frame_time, gamePlay.WIDTH)
             self.yPos = clamp(0, self.yPos + self.speed * self.dirY * game_framework.frame_time, gamePlay.HEIGHT)
+            if self.Wandering:
+                y = clamp(0, int(gamePlay.HEIGHT - self.yPos - gamePlay.mapstartY + 100) // gamePlay.boxSizeH, len(gamePlay.mapping) - 1)
+                x = clamp(0, int(self.xPos - gamePlay.mapstartX) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
+                if gamePlay.mapping[y][x] == 1:
+                    self.xPos = self.oldX
+                    self.yPos = self.oldY
+            self.oldX = self.xPos
+            self.oldY = self.yPos
             self.frame = (self.frame + FRAMES_PER_ACTION * ACTION_PER_TIME * game_framework.frame_time) % 4
             if self.speed == 0:
                 self.line = 0
@@ -88,7 +109,7 @@ class Zombie:
                         self.line = 1
                     case (0, -1):
                         self.line = 0
-        if self.SittingTable is None:
+        if not self.readyOrder and not self.waitngOrder:
             self.down = self.yPos - Zombie.zombieHeight / 2
 
     def draw(self):
@@ -111,6 +132,14 @@ class Zombie:
                 self.gauge.draw_to_origin(self.xPos - 45 + 4 - gamePlay.cameraLEFT,
                                           self.yPos - 7 + 100 - gamePlay.cameraBOTTOM,
                                           self.waitingTime / 30 * 81, 13)
+            if self.success:
+                self.bubblesuccessImage.clip_draw(int(self.bubbleFrame) * 100, 0, 100, 100,
+                                           self.xPos - gamePlay.cameraLEFT,
+                                           self.yPos + 120 - gamePlay.cameraBOTTOM, 80, 80)
+            elif self.fail:
+                self.bubblefailImage.clip_draw(int(self.bubbleFrame) * 100, 0, 100, 100,
+                                           self.xPos - gamePlay.cameraLEFT,
+                                           self.yPos + 120 - gamePlay.cameraBOTTOM, 80, 80)
 
     def Birth(self):
         self.birthingTime -= game_framework.frame_time
@@ -127,9 +156,10 @@ class Zombie:
 
     def Wander(self):
         self.speed = RUN_SPEED_PPS
+        self.Wandering = True
         self.timer -= game_framework.frame_time
         if self.timer <= 0:
-            self.timer = 1.0
+            self.timer = 3.0
             whereToGo = random.choice(Zombie.moveChoice)
             self.dirX = whereToGo[0]
             self.dirY = whereToGo[1]
@@ -144,29 +174,35 @@ class Zombie:
         self.speed = 0
         self.wait_timer -= game_framework.frame_time
         if self.wait_timer <= 0:
-            self.wait_timer = 2.0
+            self.wait_timer = 3.0
             print('wait success')
             return BehaviorTree.SUCCESS
         return BehaviorTree.RUNNING
 
-    def FindEntrance(self):
+    def EntranceDistanceCheck(self):
         distance = (gamePlay.entranceX - self.xPos) ** 2 + (gamePlay.entranceY - self.yPos) ** 2
+        if distance < (PIXEL_PER_METER * 5) ** 2:
+            self.Wandering = False
+            return BehaviorTree.SUCCESS
+        else:
+            return BehaviorTree.FAIL
+    def FindEntrance(self):
+        self.speed = RUN_SPEED_PPS
         if not gamePlay.entranceX - 50 < self.xPos < gamePlay.entranceX + 50:
             if gamePlay.entranceX - 50 < self.xPos:
                 self.dirX, self.dirY = -1, 0
-            elif self.xPos < gamePlay.entranceX + 170:
+            elif self.xPos < gamePlay.entranceX + 50:
                 self.dirX, self.dirY = 1, 0
-        elif not gamePlay.entranceY - 10 < self.yPos < gamePlay.entranceY + 10:
-            if gamePlay.entranceY - 10 < self.yPos:
+        elif not gamePlay.entranceY - 5 < self.yPos < gamePlay.entranceY + 5:
+            if gamePlay.entranceY - 50 - 5 < self.yPos:
                 self.dirX, self.dirY = 0, -1
-            elif self.yPos < gamePlay.entranceY + 10:
+            elif self.yPos < gamePlay.entranceY - 50 + 5:
                 self.dirX, self.dirY = 0, 1
-
+        distance = (gamePlay.entranceX - self.xPos) ** 2 + (gamePlay.entranceY - self.yPos) ** 2
         if distance < (PIXEL_PER_METER) ** 2:
-            self.dirX, self.dirY = 0, 0
-            print('find_entrance success')
             return BehaviorTree.SUCCESS
-        return BehaviorTree.RUNNING
+        else:
+            return BehaviorTree.RUNNING
 
     def TableCheck(self):
         for furniture in gamePlay.furnitureList:
@@ -211,7 +247,9 @@ class Zombie:
     def ReadyToOrder(self):
         self.readyOrder = True
         if self.orderCheck:
-            menuQueue.append(self.menu)
+            gamePlay.menuQueue.append(self.menu)
+            gamePlay.menuQueueTime.append(1.0)
+            # AllObjectClass.add_object(self.menu)
             self.readyOrder = False
             self.waitngOrder = True
             print('ready to order success.. waiting order')
@@ -221,15 +259,29 @@ class Zombie:
     def WaitForOrder(self):
         self.waitingTime -= game_framework.frame_time
         if self.waitingTime <= 0 or self.fail:
-            menuQueue.pop(0)
+            self.sound = load_wav('sound\\drink.wav')
+            self.sound.play()
+            gamePlay.menuQueue.pop(0)
+            gamePlay.menuQueueTime.pop(0)
             self.SittingTable.sittingZombie = None
+            self.SittingTable.sit = False
             self.SittingTable = None
+            self.speed = RUN_SPEED_PPS
+            self.waitngOrder = False
             print('fail')
-            return BehaviorTree.FAIL
+            return BehaviorTree.SUCCESS
         elif self.success:
+            self.sound = load_wav('sound\\drink.wav')
+            self.sound.play()
+            gamePlay.menuQueue.pop(0)
+            gamePlay.menuQueueTime.pop(0)
             self.SittingTable.sittingZombie = None
+            self.SittingTable.sit = False
             self.SittingTable = None
+            self.speed = RUN_SPEED_PPS
+            self.waitngOrder = False
             print('success')
+            gamePlay.pinn.money += self.pay
             return BehaviorTree.SUCCESS
         return BehaviorTree.RUNNING
 
@@ -260,6 +312,7 @@ class Zombie:
         WANDER = LeafNode("Wander", self.Wander)
         WAIT = LeafNode('Wait', self.Wait)
         ENTRANCE = LeafNode("find_entrance", self.FindEntrance)
+        ENTRANCECHECK = LeafNode("Is_it_far_entrance", self.EntranceDistanceCheck)
         CHECKTABLE = LeafNode("tableCheck", self.TableCheck)
         GOTABLE = LeafNode("move_to_table", self.MoveToTable)
         READY = LeafNode("ready_to_order", self.ReadyToOrder)
@@ -267,244 +320,18 @@ class Zombie:
         GONE = LeafNode("goodbye", self.GoodBye)
 
         MAIN = SequenceNode('main_quest')
-        MAIN.add_children(CHECKTABLE, GOTABLE, READY, WAITORDER)
+        MAIN.add_children(GOTABLE, READY, WAITORDER)
         BYE = SequenceNode('good_bye')
         BYE.add_children(ENTRANCE, GONE)
-        GETCOFFEE = SequenceNode('get_coffee')
-        GETCOFFEE.add_children(ENTRANCE, MAIN, BYE)
-        NONCHECK = SelectorNode('check-fail')
-        NONCHECK.add_children(GETCOFFEE, GONE)
-        WANDERWAIT = SelectorNode('find_or_wander')
+        WANDERWAIT = SequenceNode('find_or_wander')
         WANDERWAIT.add_children(WANDER, WAIT)
+        GETCOFFEE = SequenceNode('get_coffee')
+        GETCOFFEE.add_children(MAIN, BYE)
         AFTERBIRTH = SelectorNode('after_birth')
+        NONCHECK = SequenceNode('check-fail')
+        NONCHECK.add_children(ENTRANCECHECK, CHECKTABLE, ENTRANCE, GETCOFFEE)
         AFTERBIRTH.add_children(NONCHECK, WANDERWAIT)
         ROOT = SequenceNode('root')
         ROOT.add_children(BIRTH, AFTERBIRTH)
 
         self.bt = BehaviorTree(ROOT)
-
-# class WALK:
-#     def enter(self):
-#         print('Enter walkCafe')
-#
-#     def exit(self):
-#         print('Enter walkCafe')
-#
-#     def do(self):
-#         # 도착했을 경우
-#         if self.yPos > EntranceY:
-#             self.add_event(ENTRANCE)
-#             self.frame = 0
-#             return
-#
-#         if self.xPos < EntranceX:
-#             self.xDir = 1
-#             self.yDir = 0
-#         elif self.xPos > EntranceX:
-#             self.xDir = -1
-#             self.yDir = 0
-#         elif self.yPos < EntranceY:
-#             self.xDir = 0
-#             self.yDir = 1
-#
-#     def draw(self):
-#         self.image.clip_draw(Zombie.zombieWidth * (self.frame // 4),
-#             480 - (Zombie.zombieHeight * self.line + 1),
-#             Zombie.zombieWidth,
-#             Zombie.zombieHeight,
-#             self.xPos, self.yPos + 40)
-#         self.frame = (self.frame + 1) % 16
-# class CHECK:
-#     def do(self):
-#         for table in tables:
-#             if table.CHECKTABLE():
-#                 table.SIT()
-#                 self.SittingTable = table
-#                 self.add_event(SUCCESS)
-#                 break
-#         if self.cur_state != SUCCESS:
-#             self.cur_state = FAIL
-#         event = event_table[self.cur_state]
-#     def draw(self):
-#         self.image.clip_draw(Zombie.zombieWidth * (self.frame // 4),
-#                              480 - (Zombie.zombieHeight * self.line + 1),
-#                              Zombie.zombieWidth,
-#                              Zombie.zombieHeight,
-#                              self.xPos, self.yPos + 40)
-#         self.frame = (self.frame + 1) % 16
-#
-# class IN:
-#     dx = [-1, 1, 0, 0]
-#     dy = [0, 0, -1, 1]
-#
-#     def enter(self):
-#         self.path = [[0 for col in range(18)] for row in range(11)]
-#         self.xindex = (self.xPos - mapstartX) // boxSizeW
-#         self.yindex = HEIGHT - (self.yPos - mapstartY) // boxSizeH
-#         self.path = bfs(self.xindex, self.yindex, self.table.xIndex, self.table.yIndex, self.path)
-#         self.nx = self.ny = 0
-#
-#     def exit(self):
-#         pass
-#
-#     def do(self):
-#         for i in range(4):
-#             if self.path[(self.yPos + dx[i]) // boxSizeH][(self.xPos + dy[i]) // boxSizeW] == 1:
-#                 self.yPos += dx[i]
-#                 self.xPos += dy[i]
-#         if (self.table.xIndex == (self.xPos - mapstartX) // boxSizeW) and \
-#                 (self.table.yIndex == HEIGHT - (self.yPos - mapstartY) // boxSizeH):
-#             self.add_event(ARRIVAL)
-#     def draw(self):
-#         self.image.clip_draw(Zombie.zombieWidth * (self.frame // 4),
-#                              480 - (Zombie.zombieHeight * self.line + 1),
-#                              Zombie.zombieWidth,
-#                              Zombie.zombieHeight,
-#                              self.xPos, self.yPos + 40)
-#         self.frame = (self.frame + 1) % 16
-#
-#
-# class OUT:
-#     dx = [1, -1, 0, 0]
-#     dy = [0, 0, -1, 1]
-#
-#     def enter(self):
-#         self.path = [[0 for col in range(18)] for row in range(11)]
-#         self.xindex = (self.xPos - mapstartX) // boxSizeW
-#         self.yindex = HEIGHT - (self.yPos - mapstartY) // boxSizeH
-#         self.path = bfs(self.table.xIndex, self.table.yIndex, self.xindex, self.yindex, self.path)
-#         self.nx = self.ny = 0
-#
-#     def exit(self):
-#         pass
-#
-#     def do(self):
-#         for i in range(4):
-#             if self.path[(self.yPos + dx[i]) // boxSizeH][(self.xPos + dy[i]) // boxSizeW] == 1:
-#                 self.yPos += dx[i]
-#                 self.xPos += dy[i]
-#                 break
-#         if self.table.xIndex == (self.xPos - mapstartX) // boxSizeW and\
-#             self.table.yIndex == HEIGHT - (self.yPos - mapstartY) // boxSizeH):
-#             self.add_event(BYE)
-#     def draw(self):
-#         self.image.clip_draw(Zombie.zombieWidth * (self.frame // 4),
-#                              480 - (Zombie.zombieHeight * self.line + 1),
-#                              Zombie.zombieWidth,
-#                              Zombie.zombieHeight,
-#                              self.xPos, self.yPos + 40)
-#         self.frame = (self.frame + 1) % 16
-#
-# class READY:
-#     readyOrder = load_image("order\\bubble\\ready.png")
-#     @staticmethod
-#     def enter(self):
-#         print('ENTER ready')
-#
-#     @staticmethod
-#     def exit(self):
-#         print('EXIT ready')
-#
-#     @staticmethod
-#     def do(self):
-#         pass
-#
-#     @staticmethod
-#     def draw(self):
-#         READY.readyOrder.draw(self.xPos, self.yPos + 120)
-#         self.image.clip_draw(105 * (self.frame // 8), 480 - 120 - 120 * 0, 105, 120, self.xPos, self.yPos + 40)
-#         self.frame = (self.frame + 1) % 16
-#
-# class WAIT:
-#     bar = load_image("order\\bubble\\bar.png")
-#     gauge = load_image("order\\bubble\\gauge.png")
-#     @staticmethod
-#     def enter():
-#         print('ENTER wait')
-#
-#     @staticmethod
-#     def exit(self):
-#         if self.result == 'success':
-#             self.add_event(DRINK)
-#         else:
-#             self.add_event(NoDRINK)
-#         menuQueue.pop(0)
-#
-#     @staticmethod
-#     def do(self):
-#         self.waitingTime += 1
-#         if self.waitingTime > 54 * 10:
-#             self.add_event(NoDRINK)
-#             menuQueue.pop(0)
-#             tables[self.tableNum][0] = False
-#
-#
-#     @staticmethod
-#     def draw(self):
-#         WAIT.bar.draw(self.xPos, self.yPos + 120)
-#         for width in range(0, 54 - (self.waitingTime // 10) + 1):
-#             WAIT.gauge.draw(self.xPos - 60 // 2 + 3 + width, self.yPos + 120, 1, 8)
-#         self.image.clip_draw(105 * (self.frame // 8), 480 - 120 - 120 * 0, 105, 120, self.xPos, self.yPos + 40)
-#         self.frame = (self.frame + 1) % 16
-#
-#
-#
-# class GOOD:
-#     heart = load_image("order\\bubble\\heart.png")
-#     @staticmethod
-#     def enter(self):
-#         print('ENTER success')
-#         self.bubbleFrame = 0
-#     @staticmethod
-#     def exit(self):
-#         print('EXIT success')
-#
-#     @staticmethod
-#     def do(self):
-#         if self.bubbleCount < 5 * 8 - 1:
-#             self.bubbleCount += 1
-#         else:
-#             self.add_state(BYE)
-#             self.table.WAKEUP()
-#         self.bubbleFrame = self.bubbleCountArray[self.bubbleCount // 8]
-#
-#     @staticmethod
-#     def draw(self):
-#         GOOD.heart.clip_draw(self.bubbleFrame * 50, 0, 50, 50, self.xPos, self.yPos + 120)
-#         self.image.clip_draw(105 * (self.frame // 8), 480 - 120 - 120 * 0, 105, 120, self.xPos, self.yPos + 40)
-#         self.frame = (self.frame + 1) % 16
-#
-# class BAD:
-#     No = load_image("order\\bubble\\No.png")
-#     @staticmethod
-#     def enter(self):
-#         print('ENTER fail')
-#         self.bubbleFrame = 0
-#
-#     @staticmethod
-#     def exit(self):
-#         print('EXIT fail')
-#
-#     @staticmethod
-#     def do(self):
-#         if self.bubbleCount < 5 * 8 - 1:
-#             self.bubbleCount += 1
-#         else:
-#             self.add_state(BYE)
-#             self.table.WAKEUP()
-#         self.bubbleFrame = self.bubbleCountArray[self.bubbleCount // 8]
-#
-#     @staticmethod
-#     def draw(self):
-#         BAD.No.clip_draw(self.bubbleFrame * 50, 0, 50, 50, self.xPos, self.yPos + 120)
-#         self.image.clip_draw(105 * (self.frame // 8), 480 - 120 - 120 * 0, 105, 120, self.xPos, self.yPos + 40)
-#         self.frame = (self.frame + 1) % 16
-#
-# class REMOVE:
-#     def draw(self):
-#         self.image.clip_draw(Zombie.zombieWidth * (self.frame // 4),
-#                              480 - (Zombie.zombieHeight * self.line + 1),
-#                              Zombie.zombieWidth,
-#                              Zombie.zombieHeight,
-#                              self.xPos, self.yPos + 40)
-#         self.frame = (self.frame + 1) % 16
