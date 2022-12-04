@@ -88,6 +88,7 @@ def draw():
 def exit():
     AllObjectClass.clear()
     gamePlay.cameraBOTTOM = 1600 - 1280
+    gamePlay.cameraLEFT = 2560 - 1920
 
 def pause():
     pass

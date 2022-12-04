@@ -1,6 +1,4 @@
-import marketClass
-import marketFramework
-from pico2d import *
+import escFramework
 from pinnClass import *
 import zombieClass
 from objectClass import *
@@ -296,6 +294,8 @@ def handle_events():
             elif event.type == SDL_MOUSEBUTTONUP:
                 pinn.myInventory.MouseButtonUp(holding)
                 holding = None
+        elif event.key == SDLK_ESCAPE:
+            game_framework.push_state(escFramework)
         else:
             pinn.handle_events(event)
 
@@ -337,7 +337,6 @@ def resume():
     MAINMAP = True
     animalRoom = False
     WIDTH, HEIGHT = 2560, 1600
-    cameraLEFT = 640
     viewWIDHT, viewHEIGHT = 1920, 1280
     boxSizeW = 28
     boxSizeH = 56

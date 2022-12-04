@@ -101,6 +101,7 @@ def exit():
     global marketMapping
     marketMapping = gamePlay.mapping
     gamePlay.cameraBOTTOM = 0
+    gamePlay.cameraLEFT = 2560 - 1920
 
 def pause():
     pass
