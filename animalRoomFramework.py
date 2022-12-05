@@ -1,5 +1,5 @@
 from pico2d import *
-# from zombieClass import *
+import escFramework
 import objectClass
 import AllObjectClass
 import game_framework
@@ -25,6 +25,7 @@ animalMap[5][14] = 1
 animalMap[6][14] = 1
 animalList = []
 
+background = None
 def enter():
     gamePlay.mapping = animalMap
     gamePlay.MAINMAP = False
@@ -36,6 +37,7 @@ def enter():
     gamePlay.boxSizeW = width // 16
     gamePlay.boxSizeH = height // 7
 
+    global background
     background = objectClass.WALL(0, 0, 1920, 1280, 'map1.6\\animalRoom.png')
     AllObjectClass.add_object(background, 0)
 
@@ -70,6 +72,8 @@ def handle_events():
             elif event.type == SDL_MOUSEBUTTONUP:
                 gamePlay.pinn.myInventory.MouseButtonUp(holding)
                 holding = None
+        elif event.key == SDLK_ESCAPE:
+            game_framework.push_state(escFramework)
         else:
             gamePlay.pinn.handle_events(event)
 

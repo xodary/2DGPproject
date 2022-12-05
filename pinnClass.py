@@ -1,9 +1,7 @@
 import random
-
 import animalRoomFramework
 import game_framework
 from pico2d import *
-import zombieClass
 import cupClass
 import objectClass
 import AllObjectClass

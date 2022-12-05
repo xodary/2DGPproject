@@ -3,7 +3,6 @@ import gamePlay
 import game_framework
 from pico2d import *
 import marketClass
-from path import *
 import random
 from BehaviorTree import BehaviorTree, SelectorNode, SequenceNode, LeafNode
 

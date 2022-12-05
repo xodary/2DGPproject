@@ -1,8 +1,4 @@
 import recipeClass
-from std import *
-from pico2d import *
-import pinnClass
-# from zombieClass import *e
 from objectClass import *
 import AllObjectClass
 import game_framework

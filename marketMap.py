@@ -1,7 +1,6 @@
-from std import *
 from pico2d import *
+import escFramework
 from pinnClass import *
-# from zombieClass import *
 import objectClass
 import AllObjectClass
 import game_framework
@@ -33,6 +32,7 @@ marketMapping = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ]
 
+background = None
 def enter():
     gamePlay.mapping = marketMapping
     gamePlay.MAINMAP = False
@@ -45,6 +45,7 @@ def enter():
     gamePlay.mapstartX = 35
     gamePlay.mapstartY = 0
 
+    global background
     background = objectClass.WALL(0, 0, 1920, 1280, 'map1.6\\market.png')
     AllObjectClass.add_object(background, 0)
     AllObjectClass.add_object(gamePlay.pinn, 1)
@@ -81,6 +82,8 @@ def handle_events():
             elif event.type == SDL_MOUSEBUTTONUP:
                 gamePlay.pinn.myInventory.MouseButtonUp(holding)
                 holding = None
+        elif event.key == SDLK_ESCAPE:
+            game_framework.push_state(escFramework)
         else:
             gamePlay.pinn.handle_events(event)
 

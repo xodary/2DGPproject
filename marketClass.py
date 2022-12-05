@@ -169,9 +169,9 @@ class Inventory:
     def MouseButtonDown(self, x, y):
         click = None
         if Inventory.itemUIleft - SMALLICON.left <= x <= gamePlay.viewWIDTH - SMALLICON.right and \
-                SMALLICON.bottom <= y <= Inventory.itemUItop - SMALLICON.top:
-            mx = (x - Inventory.itemUIleft - SMALLICON.left) // SMALLICON.width
-            my = (Inventory.itemUItop - SMALLICON.top - y) // SMALLICON.height
+                SMALLICON.bottom <= y <= Inventory.itemUItop - SMALLICON.top and gamePlay.pinn.inven:
+            mx = clamp(0, (x - Inventory.itemUIleft - SMALLICON.left) // SMALLICON.width, 5)
+            my = clamp(0, (Inventory.itemUItop - SMALLICON.top - y) // SMALLICON.height, 5)
             click = pinnClass.Pinn.myitems[my][mx]
             if click:
                 self.tempXindex, self.tempYindex = click.xIndex, click.yIndex
@@ -186,8 +186,8 @@ class Inventory:
         else:
             if gamePlay.animalRoom:
                 return click
-            mx = (x + gamePlay.cameraLEFT - gamePlay.mapstartX) // gamePlay.boxSizeW
-            my = (gamePlay.HEIGHT - y - gamePlay.cameraBOTTOM - gamePlay.mapstartY) // gamePlay.boxSizeH
+            mx = clamp(0, (x + gamePlay.cameraLEFT - gamePlay.mapstartX) // gamePlay.boxSizeW, len(gamePlay.mapping[0]) - 1)
+            my = clamp(0, (gamePlay.HEIGHT - y - gamePlay.cameraBOTTOM - gamePlay.mapstartY) // gamePlay.boxSizeH,  len(gamePlay.mapping) - 1)
             holding = gamePlay.mapping[my][mx]
             if isinstance(holding, Myitem):
                 click = holding
@@ -230,7 +230,8 @@ class Inventory:
                 if self.bornSmall:
                     click.add_event(MAKESMALLICON)
                     AllObjectClass.remove_object(click)
-                    AllObjectClass.add_object(click, 6)
+                    if gamePlay.pinn.inven:
+                        AllObjectClass.add_object(click, 6)
                     pinnClass.Pinn.myitemList.append(click)
                     click.xIndex, click.yIndex = self.tempXindex, self.tempYindex
                     for y in range(click.weightY):

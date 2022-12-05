@@ -1,5 +1,7 @@
 import AllObjectClass
+import animalRoomFramework
 import gamePlay
+import marketMap
 import game_framework
 from pico2d import *
 
@@ -27,7 +29,13 @@ def handle_events():
 
 def draw():
     clear_canvas()
-    gamePlay.background.draw()
+    if gamePlay.MAINMAP:
+        gamePlay.background.draw()
+    elif gamePlay.animalRoom:
+        animalRoomFramework.background.draw()
+    else:
+        marketMap.background.draw()
+
     background.draw(gamePlay.viewWIDTH // 2, gamePlay.viewHEIGHT // 2)
     update_canvas()
 

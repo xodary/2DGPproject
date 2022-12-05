@@ -1,5 +1,6 @@
 import escFramework
-from pinnClass import *
+import marketClass
+import pinnClass
 import zombieClass
 from objectClass import *
 import AllObjectClass
@@ -151,7 +152,7 @@ def enter():
     global pinn, background
     background = BackGround('map1.6\\mapBig.png')
     AllObjectClass.add_object(background, 0)
-    pinn = Pinn()
+    pinn = pinnClass.Pinn()
     AllObjectClass.add_object(pinn, 1)
 
     # global zombies
@@ -225,7 +226,7 @@ def enter():
                                  'UI\\chickenSmallIcon.png', 'character1.6\\chicken.png',
                                  189, 500, 749, 137, 2, 2, 0, 0, 128, 128, 10, bgm='sound\\cow.wav')
 
-    Pinn.myitems = [
+    pinnClass.Pinn.myitems = [
         [machines, bloods, None, cuptablesSmall, cuptablesSmall, trashes],
         [machines, bloods, None, cuptablesSmall, cuptablesSmall, None],
         [tables, tables, None, None, None, kitchenTables],
