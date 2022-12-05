@@ -25,6 +25,15 @@ key_event_table = {
     (SDL_KEYDOWN, SDLK_DOWN): SD,
     (SDL_KEYUP, SDLK_UP): NU,
     (SDL_KEYUP, SDLK_DOWN): SU,
+
+    (SDL_KEYDOWN, SDLK_d): RD,
+    (SDL_KEYDOWN, SDLK_a): LD,
+    (SDL_KEYUP, SDLK_d): RU,
+    (SDL_KEYUP, SDLK_a): LU,
+    (SDL_KEYDOWN, SDLK_w): ND,
+    (SDL_KEYDOWN, SDLK_s): SD,
+    (SDL_KEYUP, SDLK_w): NU,
+    (SDL_KEYUP, SDLK_s): SU,
     (SDL_KEYDOWN, SDLK_ESCAPE): ESC,
     (SDL_KEYDOWN, SDLK_e): INVEN,
 }
